@@ -153,6 +153,8 @@
         <p class="eyebrow">9 класс</p><h2>Произведения</h2><p class="lead">Выбери произведение, чтобы открыть игровые задания.</p>
         <button class="work-button" data-work="igor"><span>«Слово о полку Игореве»</span><span>→</span></button>
         <button class="work-button" data-work="liza"><span>«Бедная Лиза»</span><span>→</span></button>
+        <button class="work-button" data-work="laf"><span>«Лафертовская маковница»</span><span>→</span></button>
+        <button class="work-button" data-work="gore"><span>«Горе от ума»</span><span>→</span></button>
       </section>
 
       <section class="screen" id="book">
@@ -196,6 +198,7 @@
   <dialog id="lossDialog"><div class="dialog-body"><p class="eyebrow">Путешествие окончено</p><h3 class="loss-title">Поражение</h3><p class="loss-copy" id="lossText"></p><button class="primary" id="lossAgain">Начать заново</button></div></dialog>
 
   <script src="data-bednaya-liza.js"></script>
+  <script src="data-extra-works.js"></script>
   <script>
     const screens=[...document.querySelectorAll('.screen')],backBtn=document.getElementById('backBtn');
     let current='home';
@@ -207,15 +210,15 @@
     let activeWork='igor';
     function selectWork(work){
       activeWork=work;
-      const data=work==='liza'?window.LIZA_GAME_DATA:igorData;
+      const data=work==='igor'?igorData:(work==='liza'?window.LIZA_GAME_DATA:window.EXTRA_GAME_DATA[work]);
       document.getElementById('bookEra').textContent=data.era;
       document.getElementById('bookTitle').textContent=data.title;
       document.getElementById('bookLead').textContent=data.lead;
-      truthFacts=work==='liza'?data.truthFacts:igorTruthFacts;
-      questionBanks=work==='liza'?{easy:data.easyQuiz,medium:data.mediumQuiz,expert:data.expertQuiz}:{easy:igorEasyQuiz,medium:igorMediumQuiz,expert:igorExpertQuiz};
-      crosswordWords=work==='liza'?data.crossword:igorCrosswordWords;
-      ROWS=work==='liza'?data.rows:igorData.rows;
-      COLS=work==='liza'?data.cols:igorData.cols;
+      truthFacts=work==='igor'?igorTruthFacts:data.truthFacts;
+      questionBanks=work==='igor'?{easy:igorEasyQuiz,medium:igorMediumQuiz,expert:igorExpertQuiz}:{easy:data.easyQuiz,medium:data.mediumQuiz,expert:data.expertQuiz};
+      crosswordWords=work==='igor'?igorCrosswordWords:data.crossword;
+      ROWS=work==='igor'?igorData.rows:data.rows;
+      COLS=work==='igor'?igorData.cols:data.cols;
       const board=document.getElementById('board');
       board.style.backgroundImage=`url('${data.map}')`;
       buildBoard();buildCrossword();show('book');
@@ -433,7 +436,7 @@
     document.getElementById('crossCheck').addEventListener('click',checkCrossword);document.getElementById('crossAnswers').addEventListener('click',showCrosswordAnswers);document.getElementById('crossReset').addEventListener('click',resetCrossword);
     buildBoard();buildCrossword();
 
-    function registerWebMCP(){const ctx=document.modelContext;if(!ctx?.registerTool)return;const controller=new AbortController();const register=(tool)=>Promise.resolve(ctx.registerTool(tool,{signal:controller.signal})).catch(()=>{});register({name:'open_literature_game',title:'Открыть литературную игру',description:'Открывает один из трёх режимов по «Слову о полку Игореве».',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['truth','board','crossword']}},required:['mode'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:({mode})=>{if(mode==='truth'){startTruth();show('truth')}else if(mode==='board'){resetBoard();show('boardgame')}else{resetCrossword();show('crossword')}return{opened:mode}}});register({name:'read_available_activities',title:'Показать доступные игры',description:'Возвращает список доступных игровых заданий и их объём.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({grade:9,works:['Слово о полку Игореве','Бедная Лиза'],activities:[{id:'truth',cards:10,pool:20},{id:'board',cells:31,difficulties:{easy:{questions:30,lossAfter:null},medium:{questions:40,lossAfter:10},expert:{questions:50,lossAfter:5}}},{id:'crossword',words:10}]})})}
+    function registerWebMCP(){const ctx=document.modelContext;if(!ctx?.registerTool)return;const controller=new AbortController();const register=(tool)=>Promise.resolve(ctx.registerTool(tool,{signal:controller.signal})).catch(()=>{});register({name:'open_literature_game',title:'Открыть литературную игру',description:'Открывает один из трёх режимов по «Слову о полку Игореве».',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['truth','board','crossword']}},required:['mode'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:({mode})=>{if(mode==='truth'){startTruth();show('truth')}else if(mode==='board'){resetBoard();show('boardgame')}else{resetCrossword();show('crossword')}return{opened:mode}}});register({name:'read_available_activities',title:'Показать доступные игры',description:'Возвращает список доступных игровых заданий и их объём.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({grade:9,works:['Слово о полку Игореве','Бедная Лиза','Лафертовская маковница','Горе от ума'],activities:[{id:'truth',cards:10,pool:20},{id:'board',cells:31,difficulties:{easy:{questions:30,lossAfter:null},medium:{questions:40,lossAfter:10},expert:{questions:50,lossAfter:5}}},{id:'crossword',words:10}]})})}
     registerWebMCP();
   </script>
 </body>
