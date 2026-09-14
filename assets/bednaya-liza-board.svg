@@ -38,12 +38,5 @@
 <g fill="#f4f0dc" stroke="#345f54" stroke-width="5">
   <rect x="360" y="700" width="550" height="185" rx="70" fill="url(#flowers)" opacity=".75"/>
 </g>
-<g font-family="Georgia,serif" font-weight="700" fill="#fff" stroke="#173e3a" stroke-width="6" paint-order="stroke" text-anchor="middle">
-  <text x="260" y="115" font-size="44">МОСКВА</text>
-  <text x="1230" y="300" font-size="40">СИМОНОВ МОНАСТЫРЬ</text>
-  <text x="230" y="910" font-size="42">ХИЖИНА ЛИЗЫ</text>
-  <text x="1250" y="820" font-size="46">ПРУД</text>
-  <text x="680" y="700" font-size="40">БЕРЁЗОВАЯ РОЩА</text>
-</g>
 <rect x="10" y="10" width="1516" height="1004" rx="38" fill="none" stroke="#fff" stroke-width="20" opacity=".9"/>
 </svg>
