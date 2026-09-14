@@ -56,13 +56,14 @@
     .feedback.ok{color:var(--ok)}.feedback.bad{color:var(--red)}
     .result{text-align:center;padding:30px 10px}.result .score{font-size:clamp(3rem,9vw,6rem);font-weight:900;color:var(--blue);line-height:1}
     .primary{background:var(--blue);color:#fff}.secondary{background:#e7f0ef;color:var(--ink)}
-    .board-wrap{overflow:auto;padding:3px 3px 12px}
-    .board{min-width:740px;display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:stretch}
-    .cell{min-height:82px;border:1px solid #c9dcdf;border-radius:13px;background:#fff;padding:8px;position:relative;display:flex;align-items:center;justify-content:center;text-align:center;font-size:.77rem;font-weight:750;color:var(--muted)}
-    .cell:nth-child(even){background:#f4f9ff}
-    .cell.special{background:#dff2ec;color:var(--green);border-color:#9bcdbd}
-    .cell .num{position:absolute;left:7px;top:5px;font-size:.72rem;color:#78918a}
-    .token{width:46px;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:absolute;right:4px;bottom:3px;z-index:3;animation:tokenStep .32s ease}
+    .board-wrap{overflow:auto;padding:12px;border:7px solid #57351d;border-radius:22px;background:linear-gradient(135deg,#7a4b27,#3e2515);box-shadow:inset 0 0 0 2px #c29457,0 14px 30px rgba(39,24,12,.24)}
+    .board{width:100%;min-width:920px;aspect-ratio:3/2;position:relative;overflow:hidden;border-radius:12px;background:#7d9e68 url('assets/igor-board-map.webp') center/cover no-repeat;box-shadow:inset 0 0 35px rgba(18,29,18,.4)}
+    .cell{width:54px;height:54px;border:4px solid rgba(255,255,255,.94);border-radius:50%;background:radial-gradient(circle at 35% 28%,#f9fdff,#b8dff0 72%);box-shadow:0 4px 0 #155179,0 6px 12px rgba(8,39,38,.38),inset 0 0 0 2px rgba(23,101,152,.48);position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);display:grid;place-items:center;color:#0c4f78;font-size:1.45rem;font-weight:950;z-index:2;transition:transform .16s,filter .16s}
+    .cell:hover{transform:translate(-50%,-54%) scale(1.08);filter:brightness(1.08);z-index:5}
+    .cell.special{background:radial-gradient(circle at 35% 28%,#fff6c8,#e8a735 72%);border-color:#fff7ce;color:#713b0b;box-shadow:0 4px 0 #9d5b17,0 6px 13px rgba(67,38,8,.42),inset 0 0 0 2px rgba(143,76,12,.45)}
+    .cell.start{background:radial-gradient(circle at 35% 28%,#e6fff4,#52bd8f 75%);color:#074c3b;box-shadow:0 4px 0 #17684f,0 6px 13px rgba(8,51,41,.4),inset 0 0 0 2px rgba(6,86,65,.45)}
+    .cell.finish{width:64px;height:64px;background:radial-gradient(circle at 35% 28%,#fff8d9,#e8b73f 72%);color:#6e3b0a;box-shadow:0 5px 0 #975817,0 8px 17px rgba(67,38,8,.46),inset 0 0 0 3px rgba(143,76,12,.42)}
+    .token{width:46px;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:absolute;right:-13px;bottom:29px;z-index:8;animation:tokenStep .32s ease;pointer-events:none}
     .folio-icon{font-size:2rem;line-height:1;filter:sepia(.8) saturate(1.7) drop-shadow(0 3px 3px rgba(80,45,0,.35));transform:translateY(2px)}
     .folio-base{width:33px;height:7px;border-radius:3px 3px 5px 5px;background:linear-gradient(#e9c86a,#a87818);border:1px solid #815d15;box-shadow:0 3px 5px rgba(66,45,8,.28)}
     @keyframes tokenStep{from{transform:translateY(-14px) scale(.82);opacity:.35}to{transform:none;opacity:1}}
@@ -83,13 +84,20 @@
     .dice-result{font-size:1.45rem;font-weight:900;letter-spacing:.02em;opacity:0;transform:translateY(8px);transition:.2s}
     .dice-result.visible{opacity:1;transform:none}
     .status{color:var(--muted);font-weight:700;flex:1;min-width:210px}
-    dialog{border:0;border-radius:22px;padding:0;width:min(760px,calc(100% - 28px));box-shadow:0 28px 90px rgba(2,35,30,.35);color:var(--ink)}
-    dialog::backdrop{background:rgba(3,29,25,.62);backdrop-filter:blur(3px)}
-    .dialog-body{padding:26px}
-    #questionText{font-size:clamp(1.25rem,2.4vw,1.65rem);line-height:1.38;letter-spacing:-.015em}
-    .options{display:grid;gap:10px;margin-top:18px}
-    .option{border:1px solid var(--line);background:white;color:var(--ink);border-radius:12px;padding:13px 15px;text-align:left;font-weight:700;cursor:pointer}
-    .option:hover{border-color:var(--blue);background:#f4f9ff}.option.correct{background:#e1f5ec;border-color:var(--ok)}.option.wrong{background:#fdeaea;border-color:var(--red)}
+    dialog{border:0;border-radius:8px;padding:7px;width:min(780px,calc(100% - 24px));max-height:calc(100vh - 28px);overflow:auto;background:linear-gradient(135deg,#bb813e,#6b3d1e);box-shadow:0 30px 100px rgba(2,26,23,.52),inset 0 0 0 2px #efd18d;color:#3f2a17}
+    dialog::backdrop{background:rgba(3,25,22,.74);backdrop-filter:blur(6px)}
+    .dialog-body{position:relative;padding:clamp(22px,4vw,38px);border:2px solid #d5ae66;border-radius:3px;background:linear-gradient(rgba(255,253,235,.94),rgba(245,224,171,.96)),repeating-linear-gradient(0deg,transparent 0 28px,rgba(98,65,26,.04) 29px);box-shadow:inset 0 0 38px rgba(115,69,24,.18)}
+    .dialog-body::before,.dialog-body::after{content:'❧';position:absolute;color:#986322;font-size:1.8rem;line-height:1}
+    .dialog-body::before{left:10px;top:8px}.dialog-body::after{right:10px;bottom:8px;transform:rotate(180deg)}
+    .question-top{display:flex;align-items:center;gap:13px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid rgba(141,91,32,.28)}
+    .question-emblem{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:50%;background:#0e5a49;color:#fff6d5;font-size:1.5rem;box-shadow:0 3px 0 #073b32}
+    .question-top .eyebrow{margin:0;color:#8b571e}
+    .question-meta{display:block;color:#765b3b;font-weight:750;font-size:.88rem;margin-top:2px}
+    #questionText{font:750 clamp(1.25rem,2.4vw,1.68rem)/1.4 Georgia,serif;letter-spacing:-.012em;margin-bottom:0}
+    .options{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:22px}
+    .option{min-height:66px;border:2px solid #cda863;background:rgba(255,253,238,.86);color:#3f2a17;border-radius:10px;padding:11px 14px;text-align:left;font-weight:750;cursor:pointer;display:flex;align-items:center;gap:11px;box-shadow:0 3px 0 rgba(112,71,25,.25);transition:.16s transform,.16s background,.16s border-color}
+    .option-letter{width:34px;height:34px;flex:0 0 34px;border-radius:50%;display:grid;place-items:center;background:#2165a9;color:white;font-weight:950;box-shadow:inset 0 -3px 0 rgba(0,0,0,.16)}
+    .option:hover{border-color:#2165a9;background:#fff;transform:translateY(-2px)}.option.correct{background:#dff3df;border-color:var(--ok)}.option.wrong{background:#f9dede;border-color:var(--red)}
     .cross-layout{display:grid;grid-template-columns:minmax(390px,.95fr) 1.05fr;gap:28px;align-items:start}
     .cross-grid{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;background:transparent;padding:5px;border-radius:10px;width:100%;aspect-ratio:15/11}
     .cross-cell{position:relative;background:white;min-width:0;border:2px solid #769da2;border-radius:3px}
@@ -107,7 +115,7 @@
     .clues.answers-visible .clue-answer{display:inline}
     .cross-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    @media(max-width:760px){.shell{padding:16px}.topbar{margin-bottom:16px}.brand span:last-child{display:none}.home-grid{grid-template-columns:1fr;text-align:center}.lead{margin-left:auto;margin-right:auto}.class-button{margin:auto;width:min(240px,68vw)}.mode-grid{grid-template-columns:1fr}.mode{min-height:0;display:grid;grid-template-columns:48px 1fr;column-gap:15px}.mode-icon{grid-row:1/3;margin:0}.cross-layout{grid-template-columns:1fr}.game-head{display:block}.pill{display:inline-block;margin-bottom:10px}.panel{border-radius:18px}.answer-row{grid-template-columns:1fr}.cross-grid{min-width:390px}.cross-layout>div:first-child{overflow:auto;padding-bottom:8px}}
+    @media(max-width:760px){.shell{padding:16px}.topbar{margin-bottom:16px}.brand span:last-child{display:none}.home-grid{grid-template-columns:1fr;text-align:center}.lead{margin-left:auto;margin-right:auto}.class-button{margin:auto;width:min(240px,68vw)}.mode-grid{grid-template-columns:1fr}.mode{min-height:0;display:grid;grid-template-columns:48px 1fr;column-gap:15px}.mode-icon{grid-row:1/3;margin:0}.cross-layout{grid-template-columns:1fr}.game-head{display:block}.pill{display:inline-block;margin-bottom:10px}.panel{border-radius:18px}.answer-row{grid-template-columns:1fr}.cross-grid{min-width:390px}.cross-layout>div:first-child{overflow:auto;padding-bottom:8px}.options{grid-template-columns:1fr}.dialog-body{padding:24px 18px}.board-wrap{margin-left:-8px;margin-right:-8px}}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
 </head>
@@ -167,7 +175,7 @@
   </div>
 
   <div class="dice-overlay" id="diceOverlay" aria-hidden="true"><div class="dice-stage"><div class="dice-cube" id="diceCube"><div class="die-face f1">⚀</div><div class="die-face f2">⚁</div><div class="die-face f3">⚂</div><div class="die-face f4">⚃</div><div class="die-face f5">⚄</div><div class="die-face f6">⚅</div></div><div class="dice-result" id="diceResult" aria-live="polite"></div></div></div>
-  <dialog id="questionDialog"><div class="dialog-body"><p class="eyebrow">Вопрос</p><h3 id="questionText"></h3><div class="options" id="questionOptions"></div><p class="feedback" id="questionFeedback" aria-live="polite"></p></div></dialog>
+  <dialog id="questionDialog"><div class="dialog-body"><div class="question-top"><span class="question-emblem" aria-hidden="true">✦</span><div><p class="eyebrow">Испытание пути</p><span class="question-meta" id="questionMeta"></span></div></div><h3 id="questionText"></h3><div class="options" id="questionOptions"></div><p class="feedback" id="questionFeedback" aria-live="polite"></p></div></dialog>
 
   <script>
     const screens=[...document.querySelectorAll('.screen')],backBtn=document.getElementById('backBtn');
@@ -321,9 +329,11 @@
     const difficultyNames={easy:'Лёгкий',medium:'Средний',expert:'Эксперт'};
     const BOARD_END=31;
     const specials={4:'⏸ Пропуск хода',8:'＋3 Вперёд',12:'◀ Портал на 6',16:'▶ Портал на 25',20:'−2 Назад',24:'↻ Ещё бросок',28:'＋2 Вперёд'};
+    const boardPositions=[null,[12,74],[24,72],[36,72],[48,71],[60,69],[73,66],[86,61],[90,53],[77,51],[64,49],[51,48],[38,47],[25,46],[12,45],[10,36],[23,34],[36,32],[49,31],[62,31],[75,34],[88,38],[88,27],[69,25],[50,24],[31,23],[12,21],[8,13],[29,13],[50,13],[71,14],[92,17]];
+    const specialSymbols={4:'⏸',8:'↗',12:'↙',16:'↗',20:'↙',24:'⟳',28:'↗'};
     let position=1,boardPoints=0,skipTurn=false,usedQuestions=new Set(),rolling=false,activeDifficulty='easy';
     const diceFaces=['⚀','⚁','⚂','⚃','⚄','⚅'];
-    function buildBoard(){const el=document.getElementById('board');el.innerHTML='';for(let n=1;n<=BOARD_END;n++){const cell=document.createElement('div');cell.className=`cell${specials[n]?' special':''}`;cell.dataset.cell=n;cell.innerHTML=`<span class="num">${n}</span>${specials[n]||((n===1)?'Старт':(n===BOARD_END?'Финиш':'Вопрос'))}`;el.append(cell)}renderToken()}
+    function buildBoard(){const el=document.getElementById('board');el.innerHTML='';for(let n=1;n<=BOARD_END;n++){const cell=document.createElement('div'),[x,y]=boardPositions[n],isStart=n===1,isFinish=n===BOARD_END;cell.className=`cell${specials[n]?' special':''}${isStart?' start':''}${isFinish?' finish':''}`;cell.dataset.cell=n;cell.style.setProperty('--x',`${x}%`);cell.style.setProperty('--y',`${y}%`);cell.textContent=isStart?'🏰':isFinish?'🏆':specialSymbols[n]||'?';const label=isStart?'Старт путешествия':isFinish?'Финиш путешествия':specials[n]||'Клетка с вопросом';cell.title=label;cell.setAttribute('aria-label',label);el.append(cell)}renderToken()}
     function renderToken(){document.querySelectorAll('.token').forEach(t=>t.remove());const cell=document.querySelector(`[data-cell="${position}"]`);if(cell){const t=document.createElement('span');t.className='token';t.innerHTML='<span class="folio-icon" aria-hidden="true">📖</span><span class="folio-base" aria-hidden="true"></span>';t.setAttribute('aria-label','Статуэтка открытого фолианта');cell.append(t)}document.getElementById('boardScore').textContent=`Верных ответов: ${boardPoints}`}
     function resetBoard(){position=1;boardPoints=0;skipTurn=false;usedQuestions.clear();rolling=false;buildBoard();document.querySelectorAll('.difficulty-btn').forEach(b=>b.classList.toggle('active',b.dataset.difficulty===activeDifficulty));document.getElementById('dice').textContent='⚀';document.getElementById('rollBtn').disabled=false;document.getElementById('rollBtn').textContent='Бросить кубик';document.getElementById('boardStatus').textContent=`Сложность: ${difficultyNames[activeDifficulty]}. Доберись с клетки 1 до 31!`;document.getElementById('diceOverlay').classList.remove('active')}
     function setDifficulty(level){if(!questionBanks[level]||level===activeDifficulty)return;activeDifficulty=level;resetBoard()}
@@ -355,7 +365,7 @@
       if(!q){document.getElementById('boardStatus').textContent=`Все ${bank.length} вопросов уровня «${difficultyNames[activeDifficulty]}» уже отвечены — продолжай к финишу!`;releaseBoardTurn();return}
       openQuestion(q)
     }
-    function openQuestion(q){const dlg=document.getElementById('questionDialog'),opts=document.getElementById('questionOptions'),choices=shuffle(q[1].map((label,i)=>({label,correct:i===q[2]})));document.getElementById('questionText').textContent=q[0];document.getElementById('questionFeedback').textContent='';opts.innerHTML='';choices.forEach(choice=>{const b=document.createElement('button');b.className='option';b.textContent=choice.label;b.dataset.correct=choice.correct;b.addEventListener('click',async()=>{opts.querySelectorAll('button').forEach(x=>x.disabled=true);const right=choice.correct;b.classList.add(right?'correct':'wrong');if(!right)opts.querySelector('[data-correct="true"]').classList.add('correct');if(right)boardPoints++;renderToken();const f=document.getElementById('questionFeedback');f.textContent=right?'Верно!':'Неверно. Штраф: назад на 2 клетки.';f.className=`feedback ${right?'ok':'bad'}`;await wait(1200);dlg.close();if(right){releaseBoardTurn();return}await moveTokenBy(-2,'Штраф за ошибку');if(position>1&&specials[position])await moveTokenBy(-1,'Клетка-событие: ещё на 1 назад');await wait(260);await resolveCell()});opts.append(b)});dlg.showModal()}
+    function openQuestion(q){const dlg=document.getElementById('questionDialog'),opts=document.getElementById('questionOptions'),choices=shuffle(q[1].map((label,i)=>({label,correct:i===q[2]})));document.getElementById('questionMeta').textContent=`${difficultyNames[activeDifficulty]} уровень · вопрос ${usedQuestions.size} из ${questionBanks[activeDifficulty].length}`;document.getElementById('questionText').textContent=q[0];document.getElementById('questionFeedback').textContent='';opts.innerHTML='';choices.forEach((choice,index)=>{const b=document.createElement('button'),letter=document.createElement('span'),answer=document.createElement('span');b.className='option';letter.className='option-letter';letter.textContent=['А','Б','В','Г'][index];answer.textContent=choice.label;b.append(letter,answer);b.dataset.correct=choice.correct;b.addEventListener('click',async()=>{opts.querySelectorAll('button').forEach(x=>x.disabled=true);const right=choice.correct;b.classList.add(right?'correct':'wrong');if(!right)opts.querySelector('[data-correct="true"]').classList.add('correct');if(right)boardPoints++;renderToken();const f=document.getElementById('questionFeedback');f.textContent=right?'Верно!':'Неверно. Штраф: назад на 2 клетки.';f.className=`feedback ${right?'ok':'bad'}`;await wait(1200);dlg.close();if(right){releaseBoardTurn();return}await moveTokenBy(-2,'Штраф за ошибку');if(position>1&&specials[position])await moveTokenBy(-1,'Клетка-событие: ещё на 1 назад');await wait(260);await resolveCell()});opts.append(b)});dlg.showModal()}
     document.getElementById('questionDialog').addEventListener('cancel',e=>e.preventDefault());
     document.getElementById('rollBtn').addEventListener('click',roll);document.getElementById('boardReset').addEventListener('click',resetBoard);document.querySelectorAll('.difficulty-btn').forEach(b=>b.addEventListener('click',()=>setDifficulty(b.dataset.difficulty)));
 
