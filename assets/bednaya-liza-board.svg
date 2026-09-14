@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 1024">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#dceef5"/><stop offset=".48" stop-color="#b7d8c8"/><stop offset="1" stop-color="#526d72"/></linearGradient>
+  <linearGradient id="meadow" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a9cc84"/><stop offset="1" stop-color="#3d6e54"/></linearGradient>
+  <radialGradient id="pond"><stop stop-color="#7eaec0"/><stop offset="1" stop-color="#163f4d"/></radialGradient>
+  <filter id="shadow"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-opacity=".28"/></filter>
+  <pattern id="flowers" width="44" height="38" patternUnits="userSpaceOnUse"><circle cx="8" cy="9" r="3" fill="#fff"/><circle cx="17" cy="24" r="2.5" fill="#f7e6a1"/><circle cx="34" cy="13" r="2" fill="#fff"/></pattern>
+</defs>
+<rect width="1536" height="1024" fill="url(#sky)"/>
+<path d="M0 250 Q250 180 520 245 T980 225 T1536 210 V1024 H0Z" fill="url(#meadow)"/>
+<path d="M0 190 Q280 255 535 195 Q780 140 1030 205 Q1260 260 1536 185 V330 Q1260 400 1010 320 Q760 250 520 315 Q270 375 0 290Z" fill="#6fa9bd" opacity=".92"/>
+<path d="M0 202 Q275 266 520 210 Q770 158 1020 220 Q1260 278 1536 202" fill="none" stroke="#d8edf2" stroke-width="8" opacity=".8"/>
+<g filter="url(#shadow)">
+  <g transform="translate(55 38)" fill="#e9e1ce" stroke="#315b58" stroke-width="5">
+    <path d="M0 145h420v92H0z"/><path d="M30 145V78l48-40 48 40v67M158 145V52l55-48 55 48v93M300 145V86l43-39 43 39v59"/>
+    <path d="M52 77h52M182 53h62M320 86h46"/><circle cx="213" cy="82" r="18" fill="#d7ad45"/>
+    <path d="M50 38l28-30 28 30M185 12l28-32 28 32M320 48l23-28 23 28" fill="#d7ad45"/>
+  </g>
+  <g transform="translate(1010 42)" fill="#d6d2c3" stroke="#253f42" stroke-width="6">
+    <path d="M0 205h440V90H0z"/><path d="M45 90V24l42-55 42 55v66M180 90V-2l44-62 44 62v92M325 90V35l40-53 40 53v55"/>
+    <path d="M83 24h8v45h-8zM220-2h8v70h-8zM361 35h8v34h-8z" fill="#24383c"/>
+  </g>
+  <g transform="translate(80 500)">
+    <path d="M0 170h310V340H0z" fill="#b88b56" stroke="#513d2c" stroke-width="8"/>
+    <path d="M-30 180L155 40l185 140z" fill="#76503b" stroke="#513d2c" stroke-width="9"/>
+    <rect x="122" y="230" width="66" height="110" fill="#49362a"/><rect x="32" y="215" width="70" height="57" fill="#c8e5e6" stroke="#513d2c" stroke-width="7"/>
+  </g>
+  <ellipse cx="1260" cy="800" rx="250" ry="150" fill="url(#pond)" stroke="#183f44" stroke-width="14"/>
+</g>
+<g fill="none" stroke="#e9d9a4" stroke-width="42" stroke-linecap="round" opacity=".72">
+  <path d="M110 300 C270 330 380 430 510 520 S740 650 900 650 S1110 570 1260 500 S1420 410 1460 330"/>
+  <path d="M1430 390 C1370 530 1425 670 1335 760 S1110 900 930 895 S620 820 470 880 S220 940 105 850"/>
+</g>
+<path d="M420 500 Q570 405 740 485 Q845 555 930 450" fill="none" stroke="#f0f4e8" stroke-width="62" opacity=".18"/>
+<g fill="#f5f1df" stroke="#2b6156" stroke-width="7">
+  <circle cx="500" cy="510" r="35"/><circle cx="590" cy="450" r="31"/><circle cx="700" cy="520" r="34"/><circle cx="845" cy="455" r="30"/>
+</g>
+<g fill="#f4f0dc" stroke="#345f54" stroke-width="5">
+  <rect x="360" y="700" width="550" height="185" rx="70" fill="url(#flowers)" opacity=".75"/>
+</g>
+<g font-family="Georgia,serif" font-weight="700" fill="#fff" stroke="#173e3a" stroke-width="6" paint-order="stroke" text-anchor="middle">
+  <text x="260" y="115" font-size="44">МОСКВА</text>
+  <text x="1230" y="300" font-size="40">СИМОНОВ МОНАСТЫРЬ</text>
+  <text x="230" y="910" font-size="42">ХИЖИНА ЛИЗЫ</text>
+  <text x="1250" y="820" font-size="46">ПРУД</text>
+  <text x="680" y="700" font-size="40">БЕРЁЗОВАЯ РОЩА</text>
+</g>
+<rect x="10" y="10" width="1516" height="1004" rx="38" fill="none" stroke="#fff" stroke-width="20" opacity=".9"/>
+</svg>
