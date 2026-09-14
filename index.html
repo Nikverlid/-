@@ -67,13 +67,16 @@
     .folio-base{width:33px;height:7px;border-radius:3px 3px 5px 5px;background:linear-gradient(#e9c86a,#a87818);border:1px solid #815d15;box-shadow:0 3px 5px rgba(66,45,8,.28)}
     @keyframes tokenStep{from{transform:translateY(-14px) scale(.82);opacity:.35}to{transform:none;opacity:1}}
     .board-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+    .difficulty-picker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-8px 0 18px}
+    .difficulty-picker>span{color:var(--muted);font-weight:800;margin-right:2px}
+    .difficulty-btn{border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);padding:9px 14px;font-weight:800;cursor:pointer}
+    .difficulty-btn.active{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 5px 14px rgba(14,90,73,.2)}
     .dice{font-size:2rem;min-width:54px;text-align:center}
     .dice-overlay{position:fixed;inset:0;z-index:5000;display:grid;place-items:center;background:rgba(3,29,25,.68);backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .25s}
     .dice-overlay.active{opacity:1;visibility:visible}
     .dice-stage{display:flex;flex-direction:column;align-items:center;gap:46px;perspective:800px;color:white}
     .dice-cube{width:124px;height:124px;position:relative;transform-style:preserve-3d;transform:rotateX(20deg) rotateY(28deg)}
-    .dice-cube::before{content:"";position:absolute;inset:13px;border-radius:12px;background:#eef3f3;box-shadow:0 0 34px 28px #eef3f3;transform:translateZ(0);pointer-events:none}
-    .dice-cube.spinning{animation:diceRoll 1.35s cubic-bezier(.18,.72,.18,1) forwards}
+    .dice-cube.spinning{animation:diceRoll 1.8s cubic-bezier(.18,.72,.18,1) forwards}
     .die-face{position:absolute;inset:-2px;display:grid;place-items:center;border:6px solid #fff;border-radius:16px;background:linear-gradient(145deg,#fff 18%,#e7eff0 100%);color:var(--ink);font-size:5rem;line-height:1;box-shadow:inset 0 0 0 3px #cbdadc,inset 10px 10px 18px rgba(255,255,255,.9),inset -12px -12px 20px rgba(7,59,50,.12),0 0 3px 1px #dce7e8;backface-visibility:hidden}
     .die-face.f1{transform:translateZ(61px)}.die-face.f2{transform:rotateY(90deg) translateZ(61px)}.die-face.f3{transform:rotateY(180deg) translateZ(61px)}.die-face.f4{transform:rotateY(-90deg) translateZ(61px)}.die-face.f5{transform:rotateX(90deg) translateZ(61px)}.die-face.f6{transform:rotateX(-90deg) translateZ(61px)}
     @keyframes diceRoll{0%{transform:rotateX(0) rotateY(0) rotateZ(0) scale(.72)}65%{transform:rotateX(560deg) rotateY(700deg) rotateZ(170deg) scale(1.12)}100%{transform:var(--dice-end) scale(1)}}
@@ -131,7 +134,7 @@
         <p class="eyebrow">Древнерусская литература</p><h2>«Слово о полку Игореве»</h2><p class="lead">Три способа проверить знание сюжета, героев и художественных образов.</p>
         <div class="mode-grid">
           <button class="mode" data-start="truth"><span class="mode-icon">✓</span><span><strong>Правда или ложь</strong><small>10 случайных карточек из 20</small></span></button>
-          <button class="mode" data-start="board"><span class="mode-icon">⚄</span><span><strong>Бродилка</strong><small>26 клеток, 50 сложных вопросов и события</small></span></button>
+          <button class="mode" data-start="board"><span class="mode-icon">⚄</span><span><strong>Бродилка</strong><small>31 клетка и 3 уровня сложности</small></span></button>
           <button class="mode" data-start="crossword"><span class="mode-icon">✎</span><span><strong>Кроссворд</strong><small>10 слов по произведению</small></span></button>
         </div>
       </section>
@@ -148,8 +151,9 @@
       <section class="screen" id="boardgame">
         <div class="panel">
           <div class="game-head"><div><p class="eyebrow">Игра 2</p><h2>Бродилка</h2></div><div class="pill" id="boardScore">Верных ответов: 0</div></div>
+          <div class="difficulty-picker" aria-label="Уровень сложности"><span>Сложность:</span><button class="difficulty-btn active" data-difficulty="easy">Лёгкий</button><button class="difficulty-btn" data-difficulty="medium">Средний</button><button class="difficulty-btn" data-difficulty="expert">Эксперт</button></div>
           <div class="board-wrap"><div class="board" id="board"></div></div>
-          <div class="board-controls"><button class="primary" id="rollBtn">Бросить кубик</button><div class="dice" id="dice">⚀</div><div class="status" id="boardStatus" aria-live="polite">Стартуем с клетки 1. Доберись до 26!</div><button class="secondary" id="boardReset">Сначала</button></div>
+          <div class="board-controls"><button class="primary" id="rollBtn">Бросить кубик</button><div class="dice" id="dice">⚀</div><div class="status" id="boardStatus" aria-live="polite">Стартуем с клетки 1. Доберись до 31!</div><button class="secondary" id="boardReset">Сначала</button></div>
         </div>
       </section>
 
@@ -185,7 +189,83 @@
     function finishTruth(){document.getElementById('truthPlay').hidden=true;document.getElementById('truthResult').hidden=false;document.getElementById('truthProgress').style.width='100%';document.getElementById('truthCounter').textContent='Готово';document.getElementById('truthScore').textContent=`${truthPoints}/10`;document.getElementById('truthTitle').textContent=truthPoints>=9?'Отличное знание произведения!':truthPoints>=6?'Хороший результат!':'Стоит освежить текст и попробовать снова.'}
     document.getElementById('truthAgain').addEventListener('click',startTruth);
 
-    const quiz=[
+    const easyQuiz=[
+      ['Кто возглавляет поход, о котором рассказывает произведение?',['Князь Игорь Святославич','Князь Святослав Киевский','Певец Боян','Князь Владимир Мономах'],0],
+      ['В каком году состоялся поход князя Игоря?',['В 1185 году','В 988 году','В 1240 году','В 1380 году'],0],
+      ['Против какого народа выступило войско Игоря?',['Против половцев','Против печенегов','Против монголов','Против варягов'],0],
+      ['Князем какого города был Игорь Святославич?',['Новгорода-Северского','Москвы','Великого Новгорода','Пскова'],0],
+      ['Кем Всеволод приходится князю Игорю?',['Братом','Сыном','Отцом','Племянником'],0],
+      ['Какое природное явление стало дурным предзнаменованием перед походом?',['Солнечное затмение','Лунное затмение','Наводнение','Землетрясение'],0],
+      ['Как Игорь поступил после дурного знамения?',['Продолжил поход','Вернулся домой','Распустил дружину','Отправился в Киев за разрешением'],0],
+      ['Чем закончилась главная битва для князя Игоря?',['Поражением и пленом','Полной победой','Заключением мира до боя','Добровольным возвращением'],0],
+      ['Какая река связана в произведении с поражением русского войска?',['Каяла','Нева','Москва-река','Ока'],0],
+      ['Как называют Всеволода за его силу и храбрость?',['Буй-тур','Вещий','Красное Солнышко','Осмомысл'],0],
+      ['Кто произносит «золотое слово»?',['Киевский князь Святослав','Князь Игорь','Певец Боян','Хан Кончак'],0],
+      ['К чему Святослав призывает русских князей?',['Объединиться для защиты Русской земли','Отказаться от княжеской власти','Переселиться за Дунай','Заключить союз с половцами против Киева'],0],
+      ['Кто плачет на стене Путивля?',['Ярославна','Ольга','Княгиня Евфросиния Полоцкая','Дочь Кончака'],0],
+      ['К кому Ярославна обращается в своём плаче?',['К ветру, Днепру и солнцу','К месяцу, звёздам и морю','К земле, огню и дождю','К Дону, Каяле и Суле'],0],
+      ['О ком скорбит Ярославна?',['О князе Игоре','О князе Святославе','О певце Бояне','О хане Кончаке'],0],
+      ['Кто помогает Игорю бежать из половецкого плена?',['Овлур','Боян','Гзак','Всеволод'],0],
+      ['Какая река разговаривает с Игорем во время его бегства?',['Донец','Волга','Двина','Немига'],0],
+      ['Куда возвращается Игорь после побега?',['На Русскую землю','В половецкую степь','В Византию','В Польшу'],0],
+      ['Как зовут двух половецких ханов, беседующих после побега Игоря?',['Гзак и Кончак','Олег и Всеслав','Игорь и Всеволод','Кобяк и Боян'],0],
+      ['Как зовут вещего певца, упомянутого во вступлении?',['Боян','Овлур','Кончак','Рюрик'],0],
+      ['Какую птицу автор чаще всего использует как образ русского князя?',['Сокола','Воробья','Голубя','Павлина'],0],
+      ['Как природа ведёт себя в произведении?',['Предупреждает, сочувствует и участвует в событиях','Служит только спокойным фоном','Появляется лишь в описании Киева','Всегда помогает половцам'],0],
+      ['Какова одна из главных идей произведения?',['Необходимость единства русских князей','Преимущество мирной торговли над земледелием','Необходимость перенести столицу на Дон','Прославление княжеских междоусобиц'],0],
+      ['Кто написал «Слово о полку Игореве»?',['Имя автора неизвестно','Летописец Нестор','Князь Игорь','Певец Боян'],0],
+      ['В каком веке было создано произведение?',['В XII веке','В X веке','В XV веке','В XVIII веке'],0],
+      ['Когда вышло первое печатное издание «Слова»?',['В 1800 году','В 1185 году','В 1812 году','В 1864 году'],0],
+      ['Что произошло с единственной известной древней рукописью?',['Она погибла в московском пожаре 1812 года','Она хранится в Путивле','Её увёз из плена Игорь','Она была найдена только в XX веке'],0],
+      ['Какой жанр обычно указывают в школьном изучении произведения?',['Воинская повесть с чертами героической поэмы','Бытовая комедия','Житие святого','Рыцарский роман'],0],
+      ['Как войско Игоря отнеслось к первой победе над половцами?',['Захватило богатую добычу','Сразу вернулось на Русь','Освободило Киев','Отказалось брать что-либо'],0],
+      ['Чем завершается произведение?',['Прославлением князей и дружины','Гибелью Игоря в плену','Новым солнечным затмением','Плачем Кончака'],0]
+    ];
+
+    const mediumQuiz=[
+      ['Какую цель Игорь называет дружине, решив не отступать после затмения?',['Испить шеломом из Дона','Занять золотой престол в Киеве','Освободить Переяславль','Дойти до Чёрного моря'],0],
+      ['Какими словами Всеволод приветствует Игоря, подчёркивая их родство?',['«Один брат, один свет светлый — ты, Игорь»','«Два сокола одного гнезда — мы с тобой»','«Один князь над Русской землёй — ты, Игорь»','«Один путь нам к синему Дону»'],0],
+      ['Что куряне Всеволода, по его словам, ищут в бою?',['Себе чести, а князю славы','Себе золота, а князю престола','Себе мира, а князю выкупа','Себе добычи, а князю нового города'],0],
+      ['Когда русские полки одержали первую победу над половцами?',['Рано утром в пятницу','Вечером в четверг','В полдень в субботу','На рассвете в воскресенье'],0],
+      ['Что оказалось среди добычи русских после первой победы?',['Золото, паволоки и дорогие ткани','Только кони и оружие','Иконы и церковные книги','Половецкие корабли'],0],
+      ['Для чего воины использовали захваченные плащи и ткани?',['Мостили ими болота и топкие места','Шили новые княжеские знамёна','Укрывали только раненых','Отправляли их в Киев'],0],
+      ['Что обозначают четыре солнца в описании наступающих туч?',['Четырёх русских князей в походе','Четыре дня битвы','Четыре русских города','Четыре половецких хана'],0],
+      ['Откуда идут чёрные тучи перед решающей битвой?',['С моря','Из Киева','От Путивля','С севера Руси'],0],
+      ['Кто кричит с вершины дерева, предупреждая далёкие земли?',['Див','Боян','Овлур','Гзак'],0],
+      ['Сколько дней длится решающее сражение?',['Три дня','Один день','Два дня','Семь дней'],0],
+      ['Когда падают стяги Игоря в решающей битве?',['В полдень третьего дня','Утром первого дня','Вечером второго дня','Ночью четвёртого дня'],0],
+      ['Что забывает Всеволод в разгар боя?',['О ранах, жизни, Чернигове и милой Глебовне','Только о своём оружии','О брате Игоре, но помнит о Киеве','О походе, но не о своей семье'],0],
+      ['Какой князь назван Гориславичем?',['Олег Святославич','Игорь Святославич','Святослав Киевский','Всеволод Большое Гнездо'],0],
+      ['Какое последствие княжеских усобиц особенно осуждает автор?',['Ослабление Руси перед внешним врагом','Снижение торговли с Византией','Перенос столицы из Киева','Исчезновение княжеских песен'],0],
+      ['Какие олицетворённые образы разносят скорбь после поражения?',['Карна и Жля','Слава и Честь','Див и Боян','Ветер и Солнце'],0],
+      ['Какие две реки сопоставлены в рассказе о бедах Русской земли?',['Сула и Двина','Дон и Волга','Днепр и Донец','Каяла и Дунай'],0],
+      ['Где Святославу снится вещий сон?',['В Киеве на горах','В Путивле на стене','В Чернигове у реки','В половецком стане'],0],
+      ['Какого цвета покрывало видит Святослав в своём сне?',['Чёрного','Белого','Красного','Золотого'],0],
+      ['Чем поят Святослава в зловещем сне?',['Синим вином, смешанным с горем','Красным вином, смешанным с мёдом','Водой из Каялы','Молоком с полынью'],0],
+      ['Что сыплют Святославу на грудь из пустых колчанов?',['Крупный жемчуг','Золотые монеты','Сломанные стрелы','Чёрную землю'],0],
+      ['Кого означают два сокола в толковании боярами сна Святослава?',['Игоря и Всеволода','Гзака и Кончака','Олега и Всеслава','Бояна и Овлура'],0],
+      ['Почему «золотое слово» Святослава названо смешанным со слезами?',['В нём похвала храбрости соединена с горем и упрёком','Святослав узнаёт о смерти Ярославны','Он прощается с Киевом перед пленом','Он отказывается помогать князьям'],0],
+      ['В чём Святослав упрекает Игоря и Всеволода?',['Они слишком рано и самовольно стали искать славы','Они испугались затмения и не вступили в бой','Они отказались делиться добычей с дружиной','Они заключили тайный союз с Кончаком'],0],
+      ['Из чего образно «скованы» сердца Игоря и Всеволода?',['Из крепкого булата','Из червонного золота','Из серебра','Из камня Каялы'],0],
+      ['В каком образе появляется Ярославна в начале своего плача?',['Кукушки','Лебеди','Орлицы','Горлицы'],0],
+      ['Что Ярославна хочет омочить в Каяле?',['Бобровый рукав','Шёлковый платок','Княжеский стяг','Белую хоругвь'],0],
+      ['За что Ярославна упрекает ветер?',['Он несёт ханские стрелы на русских воинов','Он мешает Игорю переплыть Донец','Он погасил солнце перед походом','Он разрушил стену Путивля'],0],
+      ['Как Ярославна называет Днепр в своём обращении?',['Славутичем','Гориславичем','Буй-туром','Осмомыслом'],0],
+      ['Чем жаркие лучи солнца вредят русским в безводном поле?',['Жаждой смыкают луки и горем затворяют колчаны','Плавят мечи и поджигают стяги','Ослепляют коней и разрушают щиты','Высушивают Дон и Донец'],0],
+      ['Как Овлур подаёт Игорю знак для побега?',['Свистит за рекой','Зажигает костёр','Бьёт в колокол','Посылает стрелу с письмом'],0],
+      ['В каких животных и птиц образно превращается Игорь во время бегства?',['В горностая, гоголя, волка и сокола','В тура, лебедя, лисицу и орла','В кукушку, ворона, барса и сокола','В белку, утку, коня и ястреба'],0],
+      ['Как Донец помогает Игорю скрыться?',['Укрывает травой и туманами, сторожит птицами','Переносит его волной прямо в Киев','Даёт ему оружие и коня','Останавливает погоню каменной стеной'],0],
+      ['Какая река вспоминается как погубившая князя Ростислава?',['Стугна','Сула','Двина','Немига'],0],
+      ['Какие птицы стуком указывают Игорю дорогу к реке?',['Дятлы','Соловьи','Вороны','Лебеди'],0],
+      ['О ком спорят Гзак и Кончак после побега Игоря?',['О сыне Игоря — «соколёнке»','О пленённом Всеволоде','О киевском князе Святославе','О помощнике Овлуре'],0],
+      ['Чем Кончак предлагает удержать сына Игоря?',['Женитьбой на красивой половецкой девушке','Большим выкупом золотом','Назначением его половецким ханом','Железными цепями в подземелье'],0],
+      ['Почему Гзак не одобряет предложение Кончака?',['Соколёнок вместе с девушкой может вернуться на Русь','Девушка уже обещана князю Всеволоду','Игорь потребует слишком большой выкуп','Святослав немедленно нападёт на Киев'],0],
+      ['Куда направляется Игорь после возвращения в Киев?',['К церкви Богородицы Пирогощей','К Софийскому собору','К княжескому дворцу Святослава','К Печерскому монастырю'],0],
+      ['Кто нашёл рукопись «Слова» в конце XVIII века?',['Алексей Мусин-Пушкин','Николай Карамзин','Александр Пушкин','Василий Жуковский'],0],
+      ['Почему содержание утраченной рукописи всё же известно?',['До её гибели успели издать текст и изготовить копию','После пожара нашли вторую древнюю рукопись','Произведение полностью сохранилось в народных песнях','Текст восстановили только по летописям'],0]
+    ];
+
+    const expertQuiz=[
       ['Какую точную последовательность движущихся образов связывает автор с Бояном, объясняя, как певец начинал песнь и охватывал разные пространства?',['Мыслью по древу — серым волком по земле — сизым орлом под облаками','Соколом под облаками — горностаем в камышах — волком по оврагу','Кукушкой по Дунаю — туром по степи — орлом над морем','Соловьём на ветви — лисицей по земле — соколом к солнцу'],0],
       ['Что в поэтическом образе Бояна означают «десять соколов», которых он пускал на стадо лебедей перед исполнением славы князьям?',['Пальцы певца, опускавшиеся на живые струны гуслей','Десять дружинников, посланных в погоню за половцами','Десять княжеских полков, сходившихся к Киеву','Стрелы, выпущенные одновременно из десяти луков'],0],
       ['Кого из древних князей Боян вспоминает в ряду своих песен, называя победителя Редеди перед касожскими полками?',['Храброго Мстислава','Олега Гориславича','Всеслава Полоцкого','Романа Святославича'],0],
@@ -237,23 +317,47 @@
       ['К какому храму едет Игорь по Боричеву взвозу после возвращения в Киев?',['К церкви Богородицы Пирогощей','К Софийскому собору','К Десятинной церкви','К Михайловскому Златоверхому монастырю'],0],
       ['Какой факт о первом печатном издании «Слова» сформулирован наиболее точно?',['Оно вышло в Москве в 1800 году тиражом 1200 экземпляров, с древнерусским текстом и переводом','Оно вышло в Петербурге в 1812 году тиражом 1000 экземпляров, только в переводе','Оно вышло в Москве в 1791 году тиражом 500 экземпляров, без древнерусского текста','Оно вышло в Киеве в 1800 году тиражом 1200 экземпляров, только на церковнославянском'],0]
     ];
-    const specials={4:'⏸ Пропуск хода',8:'＋3 Вперёд',12:'◀ Портал на 5',15:'▶ Портал на 22',18:'−2 Назад',22:'↻ Ещё бросок',24:'＋2 Вперёд'};
-    let position=1,boardPoints=0,skipTurn=false,usedQuestions=new Set(),rolling=false;
+    const questionBanks={easy:easyQuiz,medium:mediumQuiz,expert:expertQuiz};
+    const difficultyNames={easy:'Лёгкий',medium:'Средний',expert:'Эксперт'};
+    const BOARD_END=31;
+    const specials={4:'⏸ Пропуск хода',8:'＋3 Вперёд',12:'◀ Портал на 6',16:'▶ Портал на 25',20:'−2 Назад',24:'↻ Ещё бросок',28:'＋2 Вперёд'};
+    let position=1,boardPoints=0,skipTurn=false,usedQuestions=new Set(),rolling=false,activeDifficulty='easy';
     const diceFaces=['⚀','⚁','⚂','⚃','⚄','⚅'];
-    function buildBoard(){const el=document.getElementById('board');el.innerHTML='';for(let n=1;n<=26;n++){const cell=document.createElement('div');cell.className=`cell${specials[n]?' special':''}`;cell.dataset.cell=n;cell.innerHTML=`<span class="num">${n}</span>${specials[n]||((n===1)?'Старт':(n===26?'Финиш':'Вопрос'))}`;el.append(cell)}renderToken()}
+    function buildBoard(){const el=document.getElementById('board');el.innerHTML='';for(let n=1;n<=BOARD_END;n++){const cell=document.createElement('div');cell.className=`cell${specials[n]?' special':''}`;cell.dataset.cell=n;cell.innerHTML=`<span class="num">${n}</span>${specials[n]||((n===1)?'Старт':(n===BOARD_END?'Финиш':'Вопрос'))}`;el.append(cell)}renderToken()}
     function renderToken(){document.querySelectorAll('.token').forEach(t=>t.remove());const cell=document.querySelector(`[data-cell="${position}"]`);if(cell){const t=document.createElement('span');t.className='token';t.innerHTML='<span class="folio-icon" aria-hidden="true">📖</span><span class="folio-base" aria-hidden="true"></span>';t.setAttribute('aria-label','Статуэтка открытого фолианта');cell.append(t)}document.getElementById('boardScore').textContent=`Верных ответов: ${boardPoints}`}
-    function resetBoard(){position=1;boardPoints=0;skipTurn=false;usedQuestions.clear();rolling=false;buildBoard();document.getElementById('dice').textContent='⚀';document.getElementById('rollBtn').disabled=false;document.getElementById('rollBtn').textContent='Бросить кубик';document.getElementById('boardStatus').textContent='Стартуем с клетки 1. Доберись до 26!';document.getElementById('diceOverlay').classList.remove('active')}
-    function nextUnusedQuestion(){const available=quiz.map((_,i)=>i).filter(i=>!usedQuestions.has(i));if(!available.length)return null;const i=available[Math.floor(Math.random()*available.length)];usedQuestions.add(i);return quiz[i]}
+    function resetBoard(){position=1;boardPoints=0;skipTurn=false;usedQuestions.clear();rolling=false;buildBoard();document.querySelectorAll('.difficulty-btn').forEach(b=>b.classList.toggle('active',b.dataset.difficulty===activeDifficulty));document.getElementById('dice').textContent='⚀';document.getElementById('rollBtn').disabled=false;document.getElementById('rollBtn').textContent='Бросить кубик';document.getElementById('boardStatus').textContent=`Сложность: ${difficultyNames[activeDifficulty]}. Доберись с клетки 1 до 31!`;document.getElementById('diceOverlay').classList.remove('active')}
+    function setDifficulty(level){if(!questionBanks[level]||level===activeDifficulty)return;activeDifficulty=level;resetBoard()}
+    function nextUnusedQuestion(){const bank=questionBanks[activeDifficulty],available=bank.map((_,i)=>i).filter(i=>!usedQuestions.has(i));if(!available.length)return null;const i=available[Math.floor(Math.random()*available.length)];usedQuestions.add(i);return bank[i]}
     const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-    async function showDiceRoll(value){const overlay=document.getElementById('diceOverlay'),cube=document.getElementById('diceCube'),result=document.getElementById('diceResult');const ends={1:'rotateX(720deg) rotateY(720deg)',2:'rotateX(720deg) rotateY(630deg)',3:'rotateX(720deg) rotateY(540deg)',4:'rotateX(720deg) rotateY(810deg)',5:'rotateX(630deg) rotateY(720deg)',6:'rotateX(810deg) rotateY(720deg)'};result.textContent='';result.classList.remove('visible');cube.classList.remove('spinning');cube.style.setProperty('--dice-end',ends[value]);overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');void cube.offsetWidth;cube.classList.add('spinning');await wait(1380);result.textContent=`Выпало ${value}`;result.classList.add('visible');await wait(620);overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');await wait(260)}
-    async function moveTokenBy(amount,label='Ход'){const direction=Math.sign(amount),steps=Math.abs(amount);for(let i=1;i<=steps;i++){position=Math.max(1,Math.min(26,position+direction));renderToken();document.querySelector(`[data-cell="${position}"]`)?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});document.getElementById('boardStatus').textContent=`${label}: шаг ${i} из ${steps} — клетка ${position}`;await wait(430);if(position===1||position===26)break}}
+    async function showDiceRoll(value){const overlay=document.getElementById('diceOverlay'),cube=document.getElementById('diceCube'),result=document.getElementById('diceResult');const ends={1:'rotateX(720deg) rotateY(720deg)',2:'rotateX(720deg) rotateY(630deg)',3:'rotateX(720deg) rotateY(540deg)',4:'rotateX(720deg) rotateY(810deg)',5:'rotateX(630deg) rotateY(720deg)',6:'rotateX(810deg) rotateY(720deg)'};result.textContent='';result.classList.remove('visible');cube.classList.remove('spinning');cube.style.setProperty('--dice-end',ends[value]);overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');void cube.offsetWidth;cube.classList.add('spinning');await wait(1830);result.textContent=`Выпало ${value}`;result.classList.add('visible');await wait(720);overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');await wait(260)}
+    async function moveTokenBy(amount,label='Ход'){const direction=Math.sign(amount),steps=Math.abs(amount);for(let i=1;i<=steps;i++){position=Math.max(1,Math.min(BOARD_END,position+direction));renderToken();document.querySelector(`[data-cell="${position}"]`)?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});document.getElementById('boardStatus').textContent=`${label}: шаг ${i} из ${steps} — клетка ${position}`;await wait(430);if(position===1||position===BOARD_END)break}}
     async function teleportTo(target,label){document.getElementById('boardStatus').textContent=label;const token=document.querySelector('.token');if(token)token.style.animation='tokenStep .25s ease reverse forwards';await wait(300);position=target;renderToken();document.querySelector(`[data-cell="${position}"]`)?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});await wait(480)}
     function releaseBoardTurn(){rolling=false;document.getElementById('rollBtn').disabled=false}
-    async function roll(){if(rolling)return;if(skipTurn){skipTurn=false;document.getElementById('boardStatus').textContent='Ход пропущен. Теперь можно бросать снова.';document.getElementById('rollBtn').textContent='Бросить кубик';return}rolling=true;document.getElementById('rollBtn').disabled=true;const value=Math.floor(Math.random()*6)+1;document.getElementById('dice').textContent=diceFaces[value-1];await showDiceRoll(value);const steps=Math.min(26,position+value)-position;await moveTokenBy(steps);document.getElementById('boardStatus').textContent=`Выпало ${value}. Ты на клетке ${position}.`;await wait(350);await resolveCell()}
-    async function resolveCell(){if(position===26){document.getElementById('boardStatus').textContent=`Финиш! Верных ответов: ${boardPoints}.`;document.getElementById('rollBtn').disabled=true;rolling=false;return}const landed=position;if(specials[landed]){let msg=specials[landed];if(landed===4){skipTurn=true;document.getElementById('rollBtn').textContent='Пропустить ход'}else if(landed===8)await moveTokenBy(3,'Бонус +3');else if(landed===12)await teleportTo(5,'Портал переносит назад на клетку 5');else if(landed===15)await teleportTo(22,'Портал переносит вперёд на клетку 22');else if(landed===18)await moveTokenBy(-2,'Штраф −2');else if(landed===22)msg+=' — бросай ещё!';else if(landed===24)await moveTokenBy(2,'Бонус +2');if(position===26){document.getElementById('boardStatus').textContent=`Финиш! Верных ответов: ${boardPoints}.`;document.getElementById('rollBtn').disabled=true;rolling=false;return}document.getElementById('boardStatus').textContent=msg;releaseBoardTurn();return}const q=nextUnusedQuestion();if(!q){document.getElementById('boardStatus').textContent='Все 50 вопросов уже отвечены — продолжай к финишу!';releaseBoardTurn();return}openQuestion(q)}
-    function openQuestion(q){const dlg=document.getElementById('questionDialog'),opts=document.getElementById('questionOptions'),choices=shuffle(q[1].map((label,i)=>({label,correct:i===q[2]})));document.getElementById('questionText').textContent=q[0];document.getElementById('questionFeedback').textContent='';opts.innerHTML='';choices.forEach(choice=>{const b=document.createElement('button');b.className='option';b.textContent=choice.label;b.dataset.correct=choice.correct;b.addEventListener('click',()=>{opts.querySelectorAll('button').forEach(x=>x.disabled=true);const right=choice.correct;b.classList.add(right?'correct':'wrong');if(!right)opts.querySelector('[data-correct="true"]').classList.add('correct');if(right)boardPoints++;renderToken();const f=document.getElementById('questionFeedback');f.textContent=right?'Верно!':'Неверно. Правильный ответ выделен.';f.className=`feedback ${right?'ok':'bad'}`;setTimeout(()=>{dlg.close();releaseBoardTurn()},1200)});opts.append(b)});dlg.showModal()}
+    async function roll(){if(rolling)return;if(skipTurn){skipTurn=false;document.getElementById('boardStatus').textContent='Ход пропущен. Теперь можно бросать снова.';document.getElementById('rollBtn').textContent='Бросить кубик';return}rolling=true;document.getElementById('rollBtn').disabled=true;const value=Math.floor(Math.random()*6)+1;document.getElementById('dice').textContent=diceFaces[value-1];await showDiceRoll(value);const steps=Math.min(BOARD_END,position+value)-position;await moveTokenBy(steps);document.getElementById('boardStatus').textContent=`Выпало ${value}. Ты на клетке ${position}.`;await wait(350);await resolveCell()}
+    async function finishBoard(){document.getElementById('boardStatus').textContent=`Финиш! Верных ответов: ${boardPoints}.`;document.getElementById('rollBtn').disabled=true;rolling=false}
+    async function resolveCell(){
+      if(position===BOARD_END){await finishBoard();return}
+      if(position===1){releaseBoardTurn();return}
+      const landed=position;
+      if(specials[landed]){
+        if(landed===4){skipTurn=true;document.getElementById('rollBtn').textContent='Пропустить ход';document.getElementById('boardStatus').textContent=specials[landed];releaseBoardTurn();return}
+        if(landed===24){document.getElementById('boardStatus').textContent='↻ Ещё бросок — бросай кубик снова!';releaseBoardTurn();return}
+        if(landed===8)await moveTokenBy(3,'Событие: вперёд на 3');
+        else if(landed===12)await teleportTo(6,'Портал переносит назад на клетку 6');
+        else if(landed===16)await teleportTo(25,'Портал переносит вперёд на клетку 25');
+        else if(landed===20)await moveTokenBy(-2,'Событие: назад на 2');
+        else if(landed===28)await moveTokenBy(2,'Событие: вперёд на 2');
+        await wait(260);
+        await resolveCell();
+        return
+      }
+      const q=nextUnusedQuestion(),bank=questionBanks[activeDifficulty];
+      if(!q){document.getElementById('boardStatus').textContent=`Все ${bank.length} вопросов уровня «${difficultyNames[activeDifficulty]}» уже отвечены — продолжай к финишу!`;releaseBoardTurn();return}
+      openQuestion(q)
+    }
+    function openQuestion(q){const dlg=document.getElementById('questionDialog'),opts=document.getElementById('questionOptions'),choices=shuffle(q[1].map((label,i)=>({label,correct:i===q[2]})));document.getElementById('questionText').textContent=q[0];document.getElementById('questionFeedback').textContent='';opts.innerHTML='';choices.forEach(choice=>{const b=document.createElement('button');b.className='option';b.textContent=choice.label;b.dataset.correct=choice.correct;b.addEventListener('click',async()=>{opts.querySelectorAll('button').forEach(x=>x.disabled=true);const right=choice.correct;b.classList.add(right?'correct':'wrong');if(!right)opts.querySelector('[data-correct="true"]').classList.add('correct');if(right)boardPoints++;renderToken();const f=document.getElementById('questionFeedback');f.textContent=right?'Верно!':'Неверно. Штраф: назад на 2 клетки.';f.className=`feedback ${right?'ok':'bad'}`;await wait(1200);dlg.close();if(right){releaseBoardTurn();return}await moveTokenBy(-2,'Штраф за ошибку');if(position>1&&specials[position])await moveTokenBy(-1,'Клетка-событие: ещё на 1 назад');await wait(260);await resolveCell()});opts.append(b)});dlg.showModal()}
     document.getElementById('questionDialog').addEventListener('cancel',e=>e.preventDefault());
-    document.getElementById('rollBtn').addEventListener('click',roll);document.getElementById('boardReset').addEventListener('click',resetBoard);
+    document.getElementById('rollBtn').addEventListener('click',roll);document.getElementById('boardReset').addEventListener('click',resetBoard);document.querySelectorAll('.difficulty-btn').forEach(b=>b.addEventListener('click',()=>setDifficulty(b.dataset.difficulty)));
 
     const crosswordWords=[
       {word:'ЯРОСЛАВНА',r:2,c:2,d:'H',clue:'Княгиня, чей плач звучит на стене Путивля.'},
@@ -275,7 +379,7 @@
     document.getElementById('crossCheck').addEventListener('click',checkCrossword);document.getElementById('crossAnswers').addEventListener('click',showCrosswordAnswers);document.getElementById('crossReset').addEventListener('click',resetCrossword);
     buildBoard();buildCrossword();
 
-    function registerWebMCP(){const ctx=document.modelContext;if(!ctx?.registerTool)return;const controller=new AbortController();const register=(tool)=>Promise.resolve(ctx.registerTool(tool,{signal:controller.signal})).catch(()=>{});register({name:'open_literature_game',title:'Открыть литературную игру',description:'Открывает один из трёх режимов по «Слову о полку Игореве».',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['truth','board','crossword']}},required:['mode'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:({mode})=>{if(mode==='truth'){startTruth();show('truth')}else if(mode==='board'){resetBoard();show('boardgame')}else{resetCrossword();show('crossword')}return{opened:mode}}});register({name:'read_available_activities',title:'Показать доступные игры',description:'Возвращает список доступных игровых заданий и их объём.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({grade:9,work:'Слово о полку Игореве',activities:[{id:'truth',cards:10,pool:20},{id:'board',cells:26,questions:50},{id:'crossword',words:10}]})})}
+    function registerWebMCP(){const ctx=document.modelContext;if(!ctx?.registerTool)return;const controller=new AbortController();const register=(tool)=>Promise.resolve(ctx.registerTool(tool,{signal:controller.signal})).catch(()=>{});register({name:'open_literature_game',title:'Открыть литературную игру',description:'Открывает один из трёх режимов по «Слову о полку Игореве».',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['truth','board','crossword']}},required:['mode'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:({mode})=>{if(mode==='truth'){startTruth();show('truth')}else if(mode==='board'){resetBoard();show('boardgame')}else{resetCrossword();show('crossword')}return{opened:mode}}});register({name:'read_available_activities',title:'Показать доступные игры',description:'Возвращает список доступных игровых заданий и их объём.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({grade:9,work:'Слово о полку Игореве',activities:[{id:'truth',cards:10,pool:20},{id:'board',cells:31,difficulties:{easy:30,medium:40,expert:50}},{id:'crossword',words:10}]})})}
     registerWebMCP();
   </script>
 </body>
