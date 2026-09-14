@@ -151,11 +151,12 @@
 
       <section class="screen" id="works">
         <p class="eyebrow">9 класс</p><h2>Произведения</h2><p class="lead">Выбери произведение, чтобы открыть игровые задания.</p>
-        <button class="work-button" data-go="book"><span>«Слово о полку Игореве»</span><span>→</span></button>
+        <button class="work-button" data-work="igor"><span>«Слово о полку Игореве»</span><span>→</span></button>
+        <button class="work-button" data-work="liza"><span>«Бедная Лиза»</span><span>→</span></button>
       </section>
 
       <section class="screen" id="book">
-        <p class="eyebrow">Древнерусская литература</p><h2>«Слово о полку Игореве»</h2><p class="lead">Три способа проверить знание сюжета, героев и художественных образов.</p>
+        <p class="eyebrow" id="bookEra">Древнерусская литература</p><h2 id="bookTitle">«Слово о полку Игореве»</h2><p class="lead" id="bookLead">Три способа проверить знание сюжета, героев и художественных образов.</p>
         <div class="mode-grid">
           <button class="mode" data-start="truth"><span class="mode-icon">✓</span><span><strong>Правда или ложь</strong><small>10 случайных карточек из 20</small></span></button>
           <button class="mode" data-start="board"><span class="mode-icon">⚄</span><span><strong>Бродилка</strong><small>31 клетка и 3 уровня сложности</small></span></button>
@@ -194,6 +195,7 @@
   <dialog id="questionDialog"><div class="dialog-body"><div class="question-top"><span class="question-emblem" aria-hidden="true">✦</span><div><p class="eyebrow">Испытание пути</p><span class="question-meta" id="questionMeta"></span></div></div><h3 id="questionText"></h3><div class="options" id="questionOptions"></div><p class="feedback" id="questionFeedback" aria-live="polite"></p></div></dialog>
   <dialog id="lossDialog"><div class="dialog-body"><p class="eyebrow">Путешествие окончено</p><h3 class="loss-title">Поражение</h3><p class="loss-copy" id="lossText"></p><button class="primary" id="lossAgain">Начать заново</button></div></dialog>
 
+  <script src="data-bednaya-liza.js"></script>
   <script>
     const screens=[...document.querySelectorAll('.screen')],backBtn=document.getElementById('backBtn');
     let current='home';
@@ -201,11 +203,30 @@
     function goBack(){if(['truth','boardgame','crossword'].includes(current))show('book');else if(current==='book')show('works');else show('home')}
     backBtn.addEventListener('click',goBack);
     document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.go)));
+    const igorData={title:'«Слово о полку Игореве»',era:'Древнерусская литература',lead:'Три способа проверить знание сюжета, героев и художественных образов.',map:'assets/igor-board-map-v3.webp',rows:11,cols:15};
+    let activeWork='igor';
+    function selectWork(work){
+      activeWork=work;
+      const data=work==='liza'?window.LIZA_GAME_DATA:igorData;
+      document.getElementById('bookEra').textContent=data.era;
+      document.getElementById('bookTitle').textContent=data.title;
+      document.getElementById('bookLead').textContent=data.lead;
+      truthFacts=work==='liza'?data.truthFacts:igorTruthFacts;
+      questionBanks=work==='liza'?{easy:data.easyQuiz,medium:data.mediumQuiz,expert:data.expertQuiz}:{easy:igorEasyQuiz,medium:igorMediumQuiz,expert:igorExpertQuiz};
+      crosswordWords=work==='liza'?data.crossword:igorCrosswordWords;
+      ROWS=work==='liza'?data.rows:igorData.rows;
+      COLS=work==='liza'?data.cols:igorData.cols;
+      const board=document.getElementById('board');
+      board.style.backgroundImage=`url('${data.map}')`;
+      buildBoard();buildCrossword();show('book');
+    }
+    document.querySelectorAll('[data-work]').forEach(b=>b.addEventListener('click',()=>selectWork(b.dataset.work)));
     document.querySelectorAll('[data-start]').forEach(b=>b.addEventListener('click',()=>{const mode=b.dataset.start;if(mode==='truth'){startTruth();show('truth')}if(mode==='board'){resetBoard();show('boardgame')}if(mode==='crossword'){resetCrossword();show('crossword')}}));
 
-    const truthFacts=[
+    const igorTruthFacts=[
       ['Поход князя Игоря на половцев состоялся в 1185 году.',true],['Поход Игоря завершился полной победой русского войска.',false],['Игорь Святославич был князем Новгород-Северским.',true],['Главными противниками дружины Игоря были печенеги.',false],['Солнечное затмение стало дурным предзнаменованием перед походом.',true],['Князь Всеволод, участвовавший в походе, был братом Игоря.',true],['Ярославна плачет на городской стене в Путивле.',true],['В плаче Ярославна обращается к ветру, Днепру и солнцу.',true],['«Золотое слово» произносит киевский князь Святослав.',true],['Автором произведения достоверно считается летописец Нестор.',false],['Боян назван в произведении вещим певцом.',true],['Одна из главных идей произведения — необходимость единства русских князей.',true],['Игорь до конца жизни оставался в половецком плену.',false],['Битва дружины Игоря связана в произведении с рекой Каялой.',true],['Произведение было написано в XV веке.',false],['Гзак и Кончак — половецкие ханы.',true],['Природа в произведении никак не откликается на поступки героев.',false],['Единственная древняя рукопись сохранилась после московского пожара 1812 года.',false],['Первое печатное издание «Слова» вышло в 1800 году.',true],['Выражение «растекался мыслию по древу» относится к певцу Бояну.',true]
     ];
+    let truthFacts=igorTruthFacts;
     let truthRound=[],truthIndex=0,truthPoints=0,truthLocked=false;
     const shuffle=a=>[...a].sort(()=>Math.random()-.5);
     function startTruth(){truthRound=shuffle(truthFacts).slice(0,10);truthIndex=0;truthPoints=0;truthLocked=false;document.getElementById('truthPlay').hidden=false;document.getElementById('truthResult').hidden=true;renderTruth()}
@@ -214,7 +235,7 @@
     function finishTruth(){document.getElementById('truthPlay').hidden=true;document.getElementById('truthResult').hidden=false;document.getElementById('truthProgress').style.width='100%';document.getElementById('truthCounter').textContent='Готово';document.getElementById('truthScore').textContent=`${truthPoints}/10`;document.getElementById('truthTitle').textContent=truthPoints>=9?'Отличное знание произведения!':truthPoints>=6?'Хороший результат!':'Стоит освежить текст и попробовать снова.'}
     document.getElementById('truthAgain').addEventListener('click',startTruth);
 
-    const easyQuiz=[
+    const igorEasyQuiz=[
       ['Кто возглавляет поход, о котором рассказывает произведение?',['Князь Игорь Святославич','Князь Святослав Киевский','Певец Боян','Князь Владимир Мономах'],0],
       ['В каком году состоялся поход князя Игоря?',['В 1185 году','В 988 году','В 1240 году','В 1380 году'],0],
       ['Против какого народа выступило войско Игоря?',['Против половцев','Против печенегов','Против монголов','Против варягов'],0],
@@ -247,7 +268,7 @@
       ['Чем завершается произведение?',['Прославлением князей и дружины','Гибелью Игоря в плену','Новым солнечным затмением','Плачем Кончака'],0]
     ];
 
-    const mediumQuiz=[
+    const igorMediumQuiz=[
       ['Какую цель Игорь называет дружине, решив не отступать после затмения?',['Испить шеломом из Дона','Занять золотой престол в Киеве','Освободить Переяславль','Дойти до Чёрного моря'],0],
       ['Какими словами Всеволод приветствует Игоря, подчёркивая их родство?',['«Один брат, один свет светлый — ты, Игорь»','«Два сокола одного гнезда — мы с тобой»','«Один князь над Русской землёй — ты, Игорь»','«Один путь нам к синему Дону»'],0],
       ['Что куряне Всеволода, по его словам, ищут в бою?',['Себе чести, а князю славы','Себе золота, а князю престола','Себе мира, а князю выкупа','Себе добычи, а князю нового города'],0],
@@ -290,7 +311,7 @@
       ['Почему содержание утраченной рукописи всё же известно?',['До её гибели успели издать текст и изготовить копию','После пожара нашли вторую древнюю рукопись','Произведение полностью сохранилось в народных песнях','Текст восстановили только по летописям'],0]
     ];
 
-    const expertQuiz=[
+    const igorExpertQuiz=[
       ['Какую точную последовательность движущихся образов связывает автор с Бояном, объясняя, как певец начинал песнь и охватывал разные пространства?',['Мыслью по древу — серым волком по земле — сизым орлом под облаками','Соколом под облаками — горностаем в камышах — волком по оврагу','Кукушкой по Дунаю — туром по степи — орлом над морем','Соловьём на ветви — лисицей по земле — соколом к солнцу'],0],
       ['Что в поэтическом образе Бояна означают «десять соколов», которых он пускал на стадо лебедей перед исполнением славы князьям?',['Пальцы певца, опускавшиеся на живые струны гуслей','Десять дружинников, посланных в погоню за половцами','Десять княжеских полков, сходившихся к Киеву','Стрелы, выпущенные одновременно из десяти луков'],0],
       ['Кого из древних князей Боян вспоминает в ряду своих песен, называя победителя Редеди перед касожскими полками?',['Храброго Мстислава','Олега Гориславича','Всеслава Полоцкого','Романа Святославича'],0],
@@ -342,7 +363,7 @@
       ['К какому храму едет Игорь по Боричеву взвозу после возвращения в Киев?',['К церкви Богородицы Пирогощей','К Софийскому собору','К Десятинной церкви','К Михайловскому Златоверхому монастырю'],0],
       ['Какой факт о первом печатном издании «Слова» сформулирован наиболее точно?',['Оно вышло в Москве в 1800 году тиражом 1200 экземпляров, с древнерусским текстом и переводом','Оно вышло в Петербурге в 1812 году тиражом 1000 экземпляров, только в переводе','Оно вышло в Москве в 1791 году тиражом 500 экземпляров, без древнерусского текста','Оно вышло в Киеве в 1800 году тиражом 1200 экземпляров, только на церковнославянском'],0]
     ];
-    const questionBanks={easy:easyQuiz,medium:mediumQuiz,expert:expertQuiz};
+    let questionBanks={easy:igorEasyQuiz,medium:igorMediumQuiz,expert:igorExpertQuiz};
     const difficultyNames={easy:'Лёгкий',medium:'Средний',expert:'Эксперт'};
     const BOARD_END=31;
     const specials={4:'✦ Подсказка: в следующем вопросе останутся 2 варианта',8:'＋3 Вперёд',12:'◀ Портал на 6',16:'▶ Портал на 25',20:'−2 Назад',24:'↻ Ещё бросок',28:'＋2 Вперёд'};
@@ -392,7 +413,7 @@
     async function toggleBoardFullscreen(){if(document.fullscreenElement){await document.exitFullscreen();return}if(boardPanel.requestFullscreen){try{await boardPanel.requestFullscreen();return}catch(e){}}boardPanel.classList.toggle('board-maximized');fullscreenBtn.textContent=boardPanel.classList.contains('board-maximized')?'✕ Закрыть':'⛶ На весь экран'}
     fullscreenBtn.addEventListener('click',toggleBoardFullscreen);document.addEventListener('fullscreenchange',()=>{fullscreenBtn.textContent=document.fullscreenElement?'✕ Закрыть':'⛶ На весь экран'});
 
-    const crosswordWords=[
+    const igorCrosswordWords=[
       {word:'ЯРОСЛАВНА',r:2,c:2,d:'H',clue:'Княгиня, чей плач звучит на стене Путивля.'},
       {word:'СВЯТОСЛАВ',r:2,c:5,d:'V',clue:'Киевский князь, произнёсший «Золотое слово».'},
       {word:'ЗАТМЕНИЕ',r:1,c:10,d:'V',clue:'Грозное небесное знамение перед походом.'},
@@ -404,7 +425,7 @@
       {word:'КАЯЛА',r:0,c:2,d:'V',clue:'Река, у которой произошло поражение русской дружины.'},
       {word:'ДОН',r:6,c:12,d:'V',clue:'Река, к которой стремился князь Игорь.'}
     ];
-    const ROWS=11,COLS=15;let crosswordSolution=new Map(),crosswordOwners=new Map();
+    let crosswordWords=igorCrosswordWords,ROWS=11,COLS=15;let crosswordSolution=new Map(),crosswordOwners=new Map();
     function buildCrossword(){const grid=document.getElementById('crossGrid');grid.innerHTML='';crosswordSolution=new Map();crosswordOwners=new Map();const starts=new Map();crosswordWords.forEach((w,i)=>{const startKey=`${w.r},${w.c}`;starts.set(startKey,(starts.get(startKey)||[]).concat(i+1));[...w.word].forEach((ch,j)=>{const r=w.r+(w.d==='V'?j:0),c=w.c+(w.d==='H'?j:0),key=`${r},${c}`;crosswordSolution.set(key,ch);crosswordOwners.set(key,(crosswordOwners.get(key)||[]).concat(i))})});const findNextInput=input=>{const [r,c]=input.dataset.key.split(',').map(Number);const right=grid.querySelector(`input[data-key="${r},${c+1}"]`);if(right)return right;const down=grid.querySelector(`input[data-key="${r+1},${c}"]`);if(down)return down;return [...grid.querySelectorAll('input')].find(x=>Number(x.dataset.index)>Number(input.dataset.index)&&!x.value)};const writeLetter=(input,raw)=>{const letter=(raw||'').toUpperCase().replace(/[^А-ЯЁ]/g,'').slice(-1);if(!letter)return;input.value=letter;input.closest('.cross-cell').classList.remove('good','bad');document.querySelectorAll('.clues li').forEach(li=>li.classList.remove('word-good','word-bad'));document.getElementById('clues').classList.remove('answers-visible');document.getElementById('crossAnswers').hidden=true;findNextInput(input)?.focus()};for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const key=`${r},${c}`,wrap=document.createElement('div');if(crosswordSolution.has(key)){wrap.className='cross-cell';const input=document.createElement('input');input.maxLength=1;input.autocomplete='off';input.setAttribute('aria-label',`Строка ${r+1}, столбец ${c+1}`);input.dataset.key=key;input.addEventListener('focus',e=>e.target.select());input.addEventListener('click',e=>e.target.select());input.addEventListener('keydown',e=>{if(/^[А-ЯЁа-яё]$/.test(e.key)){e.preventDefault();writeLetter(e.target,e.key)}});input.addEventListener('beforeinput',e=>{if(e.inputType==='insertText'&&e.data&&/[А-ЯЁа-яё]/.test(e.data)){e.preventDefault();writeLetter(e.target,e.data)}});input.addEventListener('input',e=>{const letter=e.target.value.toUpperCase().replace(/[^А-ЯЁ]/g,'').slice(-1);e.target.value=letter;wrap.classList.remove('good','bad')});input.dataset.index=grid.querySelectorAll('input').length;wrap.append(input);if(starts.has(key)){const n=document.createElement('span');n.className='clue-num';n.textContent=starts.get(key).join('/');wrap.append(n)}}else wrap.className='block';grid.append(wrap)}const clues=document.getElementById('clues');clues.innerHTML='';clues.classList.remove('answers-visible');crosswordWords.forEach((w,i)=>{const li=document.createElement('li');li.dataset.word=i;li.innerHTML=`<b>${i+1}.</b>${w.clue}<span class="clue-answer">Ответ: ${w.word}</span>`;clues.append(li)})}
     function checkCrossword(){const statuses=crosswordWords.map(w=>[...w.word].every((ch,j)=>{const r=w.r+(w.d==='V'?j:0),c=w.c+(w.d==='H'?j:0),input=document.querySelector(`input[data-key="${r},${c}"]`);return input&&input.value===ch}));document.querySelectorAll('.clues li').forEach((li,i)=>{li.classList.remove('word-good','word-bad');li.classList.add(statuses[i]?'word-good':'word-bad')});document.querySelectorAll('.cross-cell').forEach(cell=>{const input=cell.querySelector('input'),owners=crosswordOwners.get(input.dataset.key)||[];cell.classList.remove('good','bad');cell.classList.add(owners.some(i=>statuses[i])?'good':'bad')});const right=statuses.filter(Boolean).length,f=document.getElementById('crossFeedback');document.getElementById('clues').classList.remove('answers-visible');document.getElementById('crossAnswers').hidden=false;if(right===crosswordWords.length){f.textContent='Все 10 слов разгаданы правильно!';f.className='feedback ok'}else{f.textContent=`Правильно: ${right} из ${crosswordWords.length} слов.`;f.className='feedback bad'}}
     function showCrosswordAnswers(){document.querySelectorAll('.cross-cell input').forEach(input=>{input.value=crosswordSolution.get(input.dataset.key);input.closest('.cross-cell').classList.remove('bad');input.closest('.cross-cell').classList.add('good')});document.querySelectorAll('.clues li').forEach(li=>{li.classList.remove('word-bad');li.classList.add('word-good')});document.getElementById('clues').classList.add('answers-visible');const f=document.getElementById('crossFeedback');f.textContent='Ответы показаны.';f.className='feedback ok';document.getElementById('crossAnswers').hidden=true}
@@ -412,7 +433,7 @@
     document.getElementById('crossCheck').addEventListener('click',checkCrossword);document.getElementById('crossAnswers').addEventListener('click',showCrosswordAnswers);document.getElementById('crossReset').addEventListener('click',resetCrossword);
     buildBoard();buildCrossword();
 
-    function registerWebMCP(){const ctx=document.modelContext;if(!ctx?.registerTool)return;const controller=new AbortController();const register=(tool)=>Promise.resolve(ctx.registerTool(tool,{signal:controller.signal})).catch(()=>{});register({name:'open_literature_game',title:'Открыть литературную игру',description:'Открывает один из трёх режимов по «Слову о полку Игореве».',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['truth','board','crossword']}},required:['mode'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:({mode})=>{if(mode==='truth'){startTruth();show('truth')}else if(mode==='board'){resetBoard();show('boardgame')}else{resetCrossword();show('crossword')}return{opened:mode}}});register({name:'read_available_activities',title:'Показать доступные игры',description:'Возвращает список доступных игровых заданий и их объём.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({grade:9,work:'Слово о полку Игореве',activities:[{id:'truth',cards:10,pool:20},{id:'board',cells:31,difficulties:{easy:{questions:30,lossAfter:null},medium:{questions:40,lossAfter:10},expert:{questions:50,lossAfter:5}}},{id:'crossword',words:10}]})})}
+    function registerWebMCP(){const ctx=document.modelContext;if(!ctx?.registerTool)return;const controller=new AbortController();const register=(tool)=>Promise.resolve(ctx.registerTool(tool,{signal:controller.signal})).catch(()=>{});register({name:'open_literature_game',title:'Открыть литературную игру',description:'Открывает один из трёх режимов по «Слову о полку Игореве».',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['truth','board','crossword']}},required:['mode'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:({mode})=>{if(mode==='truth'){startTruth();show('truth')}else if(mode==='board'){resetBoard();show('boardgame')}else{resetCrossword();show('crossword')}return{opened:mode}}});register({name:'read_available_activities',title:'Показать доступные игры',description:'Возвращает список доступных игровых заданий и их объём.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({grade:9,works:['Слово о полку Игореве','Бедная Лиза'],activities:[{id:'truth',cards:10,pool:20},{id:'board',cells:31,difficulties:{easy:{questions:30,lossAfter:null},medium:{questions:40,lossAfter:10},expert:{questions:50,lossAfter:5}}},{id:'crossword',words:10}]})})}
     registerWebMCP();
   </script>
 </body>
