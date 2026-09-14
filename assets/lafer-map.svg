@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 1024"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#142f32"/><stop offset=".55" stop-color="#3e6252"/><stop offset="1" stop-color="#aa8b55"/></linearGradient><filter id="sh"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity=".32"/></filter></defs><rect width="1536" height="1024" fill="url(#bg)"/>
+ <path d="M0 250 Q380 120 720 280T1536 220V1024H0Z" fill="#29483d"/>
+ <path d="M0 760 Q360 680 700 760T1536 700V1024H0Z" fill="#192e2d"/>
+ <g filter="url(#sh)" stroke="#1a2423" stroke-width="9">
+ <path d="M120 180h570v420H120z" fill="#755b43"/><path d="M75 210L405 30l330 180z" fill="#3a3330"/>
+ <rect x="190" y="280" width="105" height="125" fill="#d5b46a"/><rect x="505" y="280" width="105" height="125" fill="#d5b46a"/><rect x="348" y="410" width="115" height="190" fill="#201f20"/>
+ <circle cx="1060" cy="655" r="125" fill="#24312f"/><circle cx="1060" cy="655" r="82" fill="#0a1a1e"/><path d="M920 610h280v55H920z" fill="#55493a"/>
+ </g>
+ <path d="M1260 820q80-130 160 0q-15 100-80 100t-80-100" fill="#101315"/><circle cx="1308" cy="820" r="9" fill="#d9b844"/><circle cx="1372" cy="820" r="9" fill="#d9b844"/>
+ <g fill="#bd9b4f" opacity=".55"><circle cx="790" cy="250" r="12"/><circle cx="855" cy="330" r="9"/><circle cx="900" cy="420" r="14"/><circle cx="815" cy="500" r="8"/></g><g fill="none" stroke="#d6bc79" stroke-width="40" stroke-linecap="round" opacity=".7"><path d="M110 220C320 310 420 500 620 520s330-180 520-120 300 190 310 360"/><path d="M1420 790c-210 80-370 95-540 30S540 710 390 800 190 900 95 820"/></g><rect x="12" y="12" width="1512" height="1000" rx="34" fill="none" stroke="#fff" stroke-width="20" opacity=".82"/></svg>
