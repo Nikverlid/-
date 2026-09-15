@@ -1365,7 +1365,7 @@ window.EXTRA_GAME_DATA={
     ],
     "rows": 17,
     "cols": 12,
-    "map": "assets/lafer-map.svg"
+    "map": "assets/lafer-map.png"
   },
   "gore": {
     "title": "«Горе от ума»",
@@ -2733,6 +2733,6 @@ window.EXTRA_GAME_DATA={
     ],
     "rows": 15,
     "cols": 14,
-    "map": "assets/gore-ot-uma-map.svg"
+    "map": "assets/gore-ot-uma-map.png"
   }
 };
