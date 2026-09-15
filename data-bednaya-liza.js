@@ -1364,5 +1364,5 @@ window.LIZA_GAME_DATA={
   ],
   "rows": 11,
   "cols": 17,
-  "map": "assets/bednaya-liza-board.svg"
+  "map": "assets/bednaya-liza-board.png"
 };
