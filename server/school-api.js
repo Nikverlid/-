@@ -52,7 +52,7 @@ async function action(b,token,ip){
  if(b.action==='password'){if(String(b.password||'').length<6||b.password.length>128)fail('Новый пароль: 6–128 символов');if(await hash(String(b.old||''),u.salt)!==u.password_hash)fail('Старый пароль неверен');const s=salt();await sql`update school.accounts set password_hash=${await hash(b.password,s)},salt=${s} where id=${u.id}`;await sql`delete from school.sessions where account_id=${u.id} and token_hash<>${tokenHash}`;return {ok:true}}
  if(b.action==='assign'){
   if(!staff)fail('Нет доступа');if(!validClass(b.class)||!Number.isInteger(b.attempts)||b.attempts<1||b.attempts>100)fail('Проверьте класс и число попыток');
-  await sql`insert into school.homework(class,work,game,attempts) values(${b.class},${b.work},${b.game},${b.attempts}) on conflict(class,work,game) do update set attempts=excluded.attempts,active=true`;return {ok:true};
+  const lockKey=`${b.class}:${b.work}:${b.game}`;return await sql.begin(async t=>{await t`select pg_advisory_xact_lock(hashtextextended(${lockKey},0))`;await t`update school.homework set active=false where class=${b.class} and work=${b.work} and game=${b.game} and active`;const [h]=await t`insert into school.homework(class,work,game,attempts) values(${b.class},${b.work},${b.game},${b.attempts}) returning id`;return {ok:true,id:h.id}});
  }
  if(b.action==='toggle'){if(!staff)fail('Нет доступа');await sql`update school.homework set active=${!!b.active} where id=${b.id}`;return {ok:true}}
  if(b.action==='admin'){
