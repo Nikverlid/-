@@ -1,4 +1,5 @@
 /* Account and assignment interface. No credentials or privileged data in client assets. */
+html,body,body *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}html,body{touch-action:pan-x pan-y}
 body.school-loading main,body.school-loading .topbar{visibility:hidden}
 .school-gate{position:fixed;inset:0;z-index:10000;background:#f1f7f8;display:grid;place-items:center;padding:20px;overflow:auto}
 .school-card{width:min(100%,520px);background:white;border:1px solid #cadde5;border-radius:24px;padding:28px;box-shadow:0 18px 65px #0d50451a;color:#103e35}

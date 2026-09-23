@@ -6,6 +6,10 @@
  const titles={igor:'Слово о полку Игореве',liza:'Бедная Лиза',laf:'Лафертовская маковница',gore:'Горе от ума',souls:'Мёртвые души'};
  const games={truth:'Правда или ложь',crossword:'Кроссворд',easy:'Бродилка · лёгкий',medium:'Бродилка · средний',expert:'Бродилка · эксперт'};
  const classes=['7А','7Б','8А','8Б','9А','9Б'];
+ for(const eventName of ['copy','cut','selectstart','contextmenu','dragstart'])document.addEventListener(eventName,e=>e.preventDefault(),true);
+ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['a','c','x'].includes(e.key.toLowerCase()))e.preventDefault()},true);
+ document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
+ document.addEventListener('touchmove',e=>{if(e.touches?.length>1)e.preventDefault()},{passive:false});
  function savedToken(){try{const value=localStorage.getItem('schoolToken')||sessionStorage.getItem('schoolToken')||'';if(value){localStorage.setItem('schoolToken',value);sessionStorage.removeItem('schoolToken')}return value}catch{return sessionStorage.getItem('schoolToken')||''}}
  function saveToken(value){try{localStorage.setItem('schoolToken',value);sessionStorage.removeItem('schoolToken')}catch{sessionStorage.setItem('schoolToken',value)}}
  function clearToken(){try{localStorage.removeItem('schoolToken')}catch{}try{sessionStorage.removeItem('schoolToken')}catch{}}
