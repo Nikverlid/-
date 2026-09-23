@@ -8,14 +8,16 @@ const salt=()=>hex(crypto.getRandomValues(new Uint8Array(24)));
 async function hash(p,s){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(p),'PBKDF2',false,['deriveBits']);return hex(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:new TextEncoder().encode(s),iterations:210000},k,256))}
 const cleanName=s=>String(s||'').trim().replace(/\s+/g,' ');
 const validClass=s=>/^[789][АБ]$/.test(s);
-const publicUser=u=>({id:u.id,login:u.login,name:u.name,class:u.class,role:u.role});
+const publicUser=u=>({id:u.id,login:u.login,name:u.name,class:u.class,role:u.role,onboarding_done:!!u.onboarding_done});
+const timerSeconds={truth:150,crossword:300,easy:300,medium:300,expert:600};
+function gamePercent(s,d,g){const total=g==='truth'?10:g==='crossword'?d.crossword.length:s.correct+s.wrong;return s.abandoned?0:total?Math.round(10000*s.correct/(g==='crossword'?total+s.wrong:total))/100:0}
 const rand=n=>{const b=new Uint32Array(1),limit=Math.floor(4294967296/n)*n;do{crypto.getRandomValues(b)}while(b[0]>=limit);return b[0]%n};
 const shuffled=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 async function rate(key,max){const [r]=await sql`insert into school.rate_limits(key,hits,until_at) values(${key},1,now()+interval '15 minutes') on conflict(key) do update set hits=case when school.rate_limits.until_at<now() then 1 else school.rate_limits.hits+1 end, until_at=case when school.rate_limits.until_at<now() then now()+interval '15 minutes' else school.rate_limits.until_at end returning hits`;if(r.hits>max)fail('Слишком много попыток. Подождите 15 минут.')}
 function question(s,d,game){if(game==='crossword'||s.pending==null)return null;const q=game==='truth'?d.truthFacts[s.pending]:d[game+'Quiz'][s.pending];return game==='truth'?{text:q[0]}:{text:q[0],choices:s.choices.map(i=>({id:i,label:q[1][i]}))}}
 function prepare(s,d,game){if(game==='truth'){s.pending=s.order[s.index]??null;return}if(s.position===1||s.position>=31)return;const q=s.order[s.index];if(q==null){s.pending=null;return}s.pending=q;s.choices=shuffled([0,1,2,3]);if(s.hint){const correct=d[game+'Quiz'][q][2];s.choices=shuffled([correct,s.choices.find(x=>x!==correct)]);s.hint=false}}
 function land(s,d,game){const p=s.position;if(p===4){s.hint=true;return}if(p===24)return;const target={8:11,12:6,16:25,20:18,28:30}[p];if(target){s.moves.push({from:p,to:target,portal:p===12||p===16});s.position=target}if(s.position>=31){s.finished=true;return}prepare(s,d,game)}
-function view(a,d,g){const s=a.state;return {id:a.id,game:g,finished:a.finished,percent:a.percent,position:s.position,correct:s.correct,wrong:s.wrong,index:s.index,question:question(s,d,g),moves:s.moves||[],dice:s.dice,won:s.won,statuses:s.statuses,solved:s.solved,words:s.words,revision:s.revision,grid:g==='crossword'?d.crossword.map(w=>({r:w.r,c:w.c,d:w.d,length:w.word.length,clue:w.clue})):null,rows:d.rows,cols:d.cols}}
+function view(a,d,g){const s=a.state;return {id:a.id,game:g,finished:a.finished,timedOut:!!s.timedOut,remainingMs:Math.max(0,(s.deadline||0)-Date.now()),percent:a.percent,position:s.position,correct:s.correct,wrong:s.wrong,index:s.index,question:question(s,d,g),moves:s.moves||[],dice:s.dice,won:s.won,statuses:s.statuses,solved:s.solved,words:s.words,revision:s.revision,grid:g==='crossword'?d.crossword.map(w=>({r:w.r,c:w.c,d:w.d,length:w.word.length,clue:w.clue})):null,rows:d.rows,cols:d.cols}}
 async function action(b,token,ip){
  if(b.action==='login'||b.action==='register'){
   await rate('ip:'+ip,180);
@@ -40,6 +42,7 @@ async function action(b,token,ip){
  const tokenHash=await sha(token);const [u]=await sql`select a.* from school.accounts a join school.sessions s on s.account_id=a.id where s.token_hash=${tokenHash} and s.expires_at>now()`;if(!u)fail('Войдите в аккаунт заново');
  const staff=u.role==='teacher'||u.role==='admin';
  if(b.action==='logout'){await sql`delete from school.sessions where token_hash=${tokenHash}`;return {ok:true}}
+ if(b.action==='onboarding_done'){if(u.role!=='student')fail('Нет доступа');await sql`update school.accounts set onboarding_done=true where id=${u.id}`;return {ok:true}}
  if(b.action==='dashboard'){
   const homework=staff?await sql`select * from school.homework order by class,work,game`:await sql`select * from school.homework where class=${u.class} order by work,game`;
   const attempts=staff?await sql`select a.id,a.account_id,a.homework_id,a.percent,a.finished,a.created_at,a.state->'wrong' as wrong,a.state->'correct' as correct from school.attempts a`:await sql`select id,account_id,homework_id,percent,finished,created_at,state->'wrong' as wrong,state->'correct' as correct from school.attempts where account_id=${u.id}`;
@@ -65,14 +68,17 @@ async function action(b,token,ip){
  if(b.action==='start'){
   if(u.role!=='student')fail('Для учителя доступны свободные игры');
   return await sql.begin(async t=>{await t`select id from school.accounts where id=${u.id} for update`;const [hw]=await t`select * from school.homework where id=${b.homework} and class=${u.class} and active`;if(!hw)fail('Игра не назначена вашему классу');
-   const [c]=await t`select data from school.catalog where work=${hw.work}`;const [old]=await t`select * from school.attempts where account_id=${u.id} and homework_id=${hw.id} and not finished order by created_at desc limit 1`;if(old)return view(old,c.data,hw.game);
+   const [c]=await t`select data from school.catalog where work=${hw.work}`;const [old]=await t`select * from school.attempts where account_id=${u.id} and homework_id=${hw.id} and not finished order by created_at desc limit 1`;if(old){const s=old.state;if(!s.deadline){s.deadline=Date.now()+timerSeconds[hw.game]*1000;await t`update school.attempts set state=${t.json(s)} where id=${old.id}`;old.state=s}else if(Date.now()>=s.deadline){s.finished=true;s.timedOut=true;s.won=false;s.revision++;const p=gamePercent(s,c.data,hw.game);const [done]=await t`update school.attempts set state=${t.json(s)},finished=true,percent=${p} where id=${old.id} returning *`;return view(done,c.data,hw.game)}return view(old,c.data,hw.game)}
    const [{n}]=await t`select count(*)::int n from school.attempts where account_id=${u.id} and homework_id=${hw.id}`;if(n>=hw.attempts)fail('Попытки закончились');
-   const g=hw.game,d=c.data,s={position:1,correct:0,wrong:0,index:0,revision:0,order:[],pending:null,moves:[],solved:[],hint:false};if(g==='truth')s.order=shuffled(d.truthFacts.map((_,i)=>i)).slice(0,10);else if(g!=='crossword')s.order=shuffled(d[g+'Quiz'].map((_,i)=>i));if(g==='truth')prepare(s,d,g);
+   const g=hw.game,d=c.data,s={position:1,correct:0,wrong:0,index:0,revision:0,deadline:Date.now()+timerSeconds[g]*1000,order:[],pending:null,moves:[],solved:[],hint:false};if(g==='truth')s.order=shuffled(d.truthFacts.map((_,i)=>i)).slice(0,10);else if(g!=='crossword')s.order=shuffled(d[g+'Quiz'].map((_,i)=>i));if(g==='truth')prepare(s,d,g);
    const [a]=await t`insert into school.attempts(account_id,homework_id,state) values(${u.id},${hw.id},${t.json(s)}) returning *`;return view(a,d,g)});
  }
  if(b.action==='play')return await sql.begin(async t=>{
   const [a]=await t`select * from school.attempts where id=${b.id} and account_id=${u.id} for update`;if(!a)fail('Попытка не найдена');const [hw]=await t`select * from school.homework where id=${a.homework_id} and class=${u.class} and active`;if(!hw)fail('Доступ к домашке закрыт');const [{data:d}]=await t`select data from school.catalog where work=${hw.work}`;const g=hw.game,s=a.state;
-  if(a.finished||b.revision!==s.revision)return view(a,d,g);s.moves=[];s.dice=null;let right=null;
+  if(a.finished)return view(a,d,g);
+  if(Date.now()>=s.deadline||b.operation==='timeout'){if(Date.now()<s.deadline)fail('Время ещё не вышло');if(g==='crossword'&&Array.isArray(b.words)&&b.words.length===d.crossword.length){s.words=b.words.map((w,i)=>s.solved.includes(i)?d.crossword[i].word:String(w||'').slice(0,100));s.statuses=d.crossword.map((w,i)=>s.words[i].trim().toUpperCase().replaceAll('Ё','Е')===w.word.replaceAll('Ё','Е'));s.statuses.forEach((ok,i)=>{if(!s.solved.includes(i)){if(ok){s.solved.push(i);s.correct++}else s.wrong++}})}s.finished=true;s.timedOut=true;s.won=false;s.moves=[];s.dice=null;s.revision++;const p=gamePercent(s,d,g);const [done]=await t`update school.attempts set state=${t.json(s)},finished=true,percent=${p} where id=${a.id} returning *`;return view(done,d,g)}
+  if(b.revision!==s.revision)return view(a,d,g);
+  s.moves=[];s.dice=null;let right=null;
   if(b.operation==='abandon'){s.finished=true;s.won=false;s.abandoned=true}
   else if(g==='crossword'){
    if(b.operation!=='check'||!Array.isArray(b.words)||b.words.length!==d.crossword.length)fail('Неверная проверка');
@@ -86,7 +92,7 @@ async function action(b,token,ip){
    if(g==='truth'){if(s.index===10)s.finished=true;else prepare(s,d,g)}
    else if(!right){if(s.wrong>=(g==='expert'?5:g==='medium'?10:Infinity)){s.finished=true;s.won=false}else{const from=s.position;s.position=Math.max(1,from-2);s.moves.push({from,to:s.position});if([4,8,12,16,20,24,28].includes(s.position)){const f=s.position;s.position--;s.moves.push({from:f,to:s.position})}land(s,d,g)}}
   }else fail('Неизвестное действие');
-  s.revision++;let percent=null;if(s.finished){const total=g==='truth'?10:g==='crossword'?d.crossword.length:s.correct+s.wrong;percent=s.abandoned?0:total?Math.round(10000*s.correct/(g==='crossword'?total+s.wrong:total))/100:0}
+  s.revision++;let percent=null;if(s.finished)percent=gamePercent(s,d,g)
   const [updated]=await t`update school.attempts set state=${t.json(s)},finished=${!!s.finished},percent=${percent} where id=${a.id} returning *`;return {...view(updated,d,g),right};
  });
  fail('Неизвестное действие');
