@@ -29,9 +29,9 @@ async function scenario(role){
   w.document.getElementById('schoolHomework').click();await sleep();assert(w.document.getElementById('hwForm'));w.document.querySelector('.school-close').click();
   w.document.getElementById('schoolResults').click();await sleep();assert(w.document.getElementById('resultRows'));w.document.querySelector('.school-close').click();
  }else{
-  assert(!w.document.getElementById('schoolQuestions'));assert(w.document.querySelector('[data-work="liza"]').classList.contains('school-locked'));
+  assert(!w.document.getElementById('schoolQuestions'));const lockedWork=w.document.querySelector('[data-work="liza"]');assert(lockedWork.classList.contains('school-locked'));lockedWork.click();await sleep();assert(lockedWork.classList.contains('school-denied'));
   w.document.querySelector('[data-work="igor"]').click();await sleep();w.document.querySelector('[data-start="truth"]').click();await sleep();await sleep();assert.equal(w.document.getElementById('factText').textContent,'Серверный вопрос');
-  w.document.querySelector('[data-answer="true"]').click();await sleep();assert.equal(calls.filter(b=>b.action==='play').length,1);
+  const truthButton=w.document.querySelector('[data-answer="true"]');truthButton.click();await sleep();assert.equal(calls.filter(b=>b.action==='play').length,1);assert(truthButton.classList.contains('school-answer-correct'));await new Promise(r=>setTimeout(r,950));
   w.document.getElementById('backBtn').click();await sleep();w.document.querySelector('[data-start="crossword"]').click();await sleep();await sleep();assert.equal(w.document.querySelectorAll('#crossGrid input').length,5);w.document.getElementById('crossCheck').click();await sleep();assert(w.document.getElementById('crossFeedback').textContent.includes('Ошибок: 1'));
   w.document.getElementById('backBtn').click();await sleep();w.document.querySelector('[data-start="board"]').click();await sleep();w.document.querySelector('[data-school-level="easy"]').click();await sleep();await sleep();w.document.getElementById('rollBtn').click();await sleep();await sleep();assert(w.document.getElementById('questionDialog').open);assert.equal(w.document.getElementById('questionText').textContent,'Вопрос с сервера');
  }
