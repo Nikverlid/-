@@ -29,7 +29,7 @@ async function action(b,token,ip){
    if(!validClass(cls)||surname.length<2||first.length<2||name.length>100)fail('Проверьте фамилию, имя и класс');
    const s=salt(),h=await hash(password,s);
    const u=await sql.begin(async t=>{await t`select pg_advisory_xact_lock(76213)`;const [{n}]=await t`select count(*)::int n from school.accounts where class=${cls} and role='student'`;if(n>=15)fail('В этом классе уже 15 учеников');const login='u'+salt().slice(0,10);const [u]=await t`insert into school.accounts(login,name,class,role,password_hash,salt) values(${login},${name},${cls},'student',${h},${s}) returning *`;return u});
-   const tok=salt()+salt();await sql`insert into school.sessions values(${await sha(tok)},${u.id},now()+interval '12 hours')`;return {user:publicUser(u),token:tok};
+   const tok=salt()+salt();await sql`insert into school.sessions values(${await sha(tok)},${u.id},now()+interval '90 days')`;return {user:publicUser(u),token:tok};
   }
   let users;
   if(b.staff)users=await sql`select * from school.accounts where role in ('teacher','admin')`;
@@ -37,9 +37,9 @@ async function action(b,token,ip){
   else users=await sql`select * from school.accounts where lower(name)=lower(${cleanName(b.surname)+' '+cleanName(b.first)}) and class=${String(b.class||'')} and role='student'`;
   let u;for(const x of users)if(await hash(password,x.salt)===x.password_hash)u=x;
   if(!u)fail('Неверные данные для входа');
-  const tok=salt()+salt();await sql`insert into school.sessions values(${await sha(tok)},${u.id},now()+interval '12 hours')`;return {user:publicUser(u),token:tok};
+  const tok=salt()+salt();await sql`insert into school.sessions values(${await sha(tok)},${u.id},now()+interval '90 days')`;return {user:publicUser(u),token:tok};
  }
- const tokenHash=await sha(token);const [u]=await sql`select a.* from school.accounts a join school.sessions s on s.account_id=a.id where s.token_hash=${tokenHash} and s.expires_at>now()`;if(!u)fail('Войдите в аккаунт заново');
+ const tokenHash=await sha(token);const [u]=await sql`select a.* from school.accounts a join school.sessions s on s.account_id=a.id where s.token_hash=${tokenHash} and s.expires_at>now()`;if(!u)fail('Войдите в аккаунт заново');await sql`update school.sessions set expires_at=now()+interval '90 days' where token_hash=${tokenHash} and expires_at<now()+interval '30 days'`;
  const staff=u.role==='teacher'||u.role==='admin';
  if(b.action==='logout'){await sql`delete from school.sessions where token_hash=${tokenHash}`;return {ok:true}}
  if(b.action==='onboarding_done'){if(u.role!=='student')fail('Нет доступа');await sql`update school.accounts set onboarding_done=true where id=${u.id}`;return {ok:true}}
