@@ -18,3 +18,5 @@ body.school-loading main,body.school-loading .topbar{visibility:hidden}
 body.student-mode #crossAnswers{display:none!important}body.student-mode .clue-answer{display:none!important}
 body.student-mode #crossReset{display:none}body.student-mode .school-nav{position:relative;z-index:2}
 @media(max-width:600px){.school-card{padding:20px}.school-nav{padding:10px}.school-nav button{padding:8px 10px;font-size:.85rem}.school-dialog{padding:16px}.school-dialog td,.school-dialog th{padding:8px}.school-row>*{max-width:100%}.student-hw-card{align-items:stretch;flex-direction:column}.student-hw-card button{width:100%}}
+
+.student-next-lesson{padding:12px 14px;border-radius:12px;background:#e3f3ec;color:#12513f}.student-due-date{font-size:.9rem;color:#385e54}.results-date-label{max-width:420px;padding:12px;border:1px solid #c8dce1;border-radius:12px;background:#f4f8f9}.results-date-label select{margin-top:6px}
