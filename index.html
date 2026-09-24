@@ -53,7 +53,7 @@
     .work-button{width:100%;border:1px solid #a9cbe9;background:white;border-radius:18px;padding:21px 24px;color:var(--ink);font-weight:850;font-size:clamp(1rem,2vw,1.25rem);text-align:left;cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;gap:20px}
     .work-button span:last-child{color:var(--blue);font-size:1.5rem}
     .work-button:hover{border-color:var(--blue);transform:translateY(-2px)}
-    .mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px}
+    .mode-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:28px}
     .mode{min-height:205px;border:1px solid var(--line);border-radius:22px;background:white;padding:23px;text-align:left;color:var(--ink);cursor:pointer;box-shadow:0 10px 26px rgba(7,59,50,.08);transition:.18s transform,.18s border-color}
     .mode:hover{transform:translateY(-4px);border-color:var(--blue)}
     .mode-icon{width:48px;height:48px;border-radius:14px;background:var(--blue2);display:grid;place-items:center;font-size:1.45rem;margin-bottom:23px}
@@ -381,6 +381,7 @@
       truthFacts=work==='igor'?igorTruthFacts:data.truthFacts;
       questionBanks=work==='igor'?{easy:igorEasyQuiz,medium:igorMediumQuiz,expert:igorExpertQuiz}:{easy:data.easyQuiz,medium:data.mediumQuiz,expert:data.expertQuiz};
       crosswordWords=work==='igor'?igorCrosswordWords:data.crossword;
+      window.syncTeamGameTile?.(work);
       ROWS=work==='igor'?igorData.rows:data.rows;
       COLS=work==='igor'?igorData.cols:data.cols;
       renderStory(work);
