@@ -9,7 +9,7 @@ export function openTeamGame(bank,user){
  let state=null,interval=null,enteredFullscreen=false;
  try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved?.version===VERSION&&[2,3,4].includes(saved.count)&&Array.isArray(saved.used)&&saved.used.every(id=>bank.questions.some(q=>q.id===id)))state=saved}catch{}
  const d=document.createElement('dialog');d.id='teamGame';d.className='team-game';
- d.innerHTML='<div class="tg-top"><div><span class="tg-eyebrow">КОМАНДНЫЙ ТУРНИР</span><h2>Своя игра</h2><p>${esc(bank.title||'Слово о полку Игореве')}</p></div><div class="tg-tools"><button type="button" id="tgFullscreen" aria-label="Полный экран">⛶ Полный экран</button><button type="button" id="tgClose">✕ Выйти</button></div></div><div id="tgContent"></div>';
+ d.innerHTML='<div class="tg-top"><div><span class="tg-eyebrow">КОМАНДНЫЙ ТУРНИР</span><h2>Своя игра</h2><p>'+esc(bank.title||'Слово о полку Игореве')+'</p></div><div class="tg-tools"><button type="button" id="tgFullscreen" aria-label="Полный экран">⛶ Полный экран</button><button type="button" id="tgClose">✕ Выйти</button></div></div><div id="tgContent"></div>';
  document.body.append(d);d.showModal();
  const el=id=>d.querySelector('#'+id);
  function save(){try{if(state)localStorage.setItem(key,JSON.stringify(state));else localStorage.removeItem(key)}catch{}}
