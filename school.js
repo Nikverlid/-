@@ -50,7 +50,7 @@
  }
  async function teamGame(work=activeWork){
   await refresh();if(!staff())throw Error('Нет доступа');
-  const bank=await api('team_questions',{work});const module=await import('./team-game.js?v=5');
+  const bank=await api('team_questions',{work});const module=await import('./team-game.js?v=6');
   module.openTeamGame(bank,user);
  }
  window.syncTeamGameTile=work=>{
