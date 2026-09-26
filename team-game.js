@@ -14,34 +14,21 @@ export function openTeamGame(bank,user){
  const el=id=>d.querySelector('#'+id);
  function save(){try{if(state)localStorage.setItem(key,JSON.stringify(state));else localStorage.removeItem(key)}catch{}}
  function syncFullscreen(){
-  const nativeFullscreen=document.fullscreenElement===document.documentElement||document.fullscreenElement===d;
-  if(!nativeFullscreen)simulatedFullscreen=false;
-  enteredFullscreen=nativeFullscreen||simulatedFullscreen;
+  enteredFullscreen=simulatedFullscreen;
   d.classList.toggle('tg-fullscreen-mode',enteredFullscreen);
   const button=el('tgFullscreen');
   if(button)button.textContent=enteredFullscreen?'↙ Выйти из полного экрана':'⛶ Полный экран';
  }
- async function close(){
-  save();clearInterval(interval);simulatedFullscreen=false;
-  if(document.fullscreenElement&&(document.fullscreenElement===document.documentElement||document.fullscreenElement===d)){
-   try{await document.exitFullscreen()}catch{}
-  }
+ function close(){
+  save();clearInterval(interval);simulatedFullscreen=false;enteredFullscreen=false;
   d.classList.remove('tg-fullscreen-mode');d.close();d.remove();
  }
  el('tgClose').onclick=close;d.addEventListener('cancel',e=>{e.preventDefault();close()});
- el('tgFullscreen').onclick=async()=>{
-  if(enteredFullscreen){
-   simulatedFullscreen=false;
-   if(document.fullscreenElement){try{await document.exitFullscreen()}catch{}}
-   syncFullscreen();return;
-  }
-  try{
-   if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();
-   else simulatedFullscreen=true;
-  }catch{simulatedFullscreen=true}
+ el('tgFullscreen').onclick=()=>{
+  simulatedFullscreen=!simulatedFullscreen;
   syncFullscreen();
  };
- document.addEventListener('fullscreenchange',syncFullscreen);
+
  function scores(){return '<div class="tg-scores">'+state.scores.map((score,i)=>`<div class="tg-score tg-team-${i} ${state.turn===i&&state.phase!=='finished'?'is-turn':''}"><span>Команда ${i+1}</span><strong>${score}<small> баллов</small></strong>${state.turn===i&&state.phase!=='finished'?'<em>Выбирает вопрос</em>':''}</div>`).join('')+'</div>'}
  function bar(text){return `<div class="tg-status"><h3>${esc(text)}</h3>${state.deadline?'<span class="tg-clock" id="tgClock" role="timer"></span>':''}</div>`}
  function setup(){el('tgContent').innerHTML=`<div class="tg-setup"><p class="tg-eyebrow">25 ВОПРОСОВ · 5 КАТЕГОРИЙ</p><h3>Сколько команд участвует?</h3><div class="tg-counts">${[2,3,4].map(n=>`<button data-count="${n}"><strong>${n}</strong><span>команды</span></button>`).join('')}</div><ul><li>Выбор вопроса — 1 минута. Ответ — до 2 минут на каждую команду.</li><li>Вопросы стоят от 10 до 50 баллов. Ошибка или отсутствие ответа — 0 баллов.</li><li>Иногда открывается перехват: отвечает команда, выбравшая вопрос, затем остальные по номеру. Номер команды появляется на выбранном варианте.</li><li>Если первая команда ответила верно, все баллы получает она. Иначе правильно ответившие соперники делят стоимость вопроса, округляя вниз.</li><li>Ответы команд вводит учитель. Правильный ответ откроется, когда все участвующие команды закончат отвечать.</li></ul><p class="tg-note">Игру можно свернуть и продолжить на этом устройстве. Текущий таймер продолжает идти.</p></div>`;d.querySelectorAll('[data-count]').forEach(b=>b.onclick=()=>{state=createGame(Number(b.dataset.count));save();render()})}
