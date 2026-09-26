@@ -6,17 +6,42 @@ export function openTeamGame(bank,user){
  if(!['teacher','admin'].includes(user.role))throw Error('Нет доступа');
  if(document.getElementById('teamGame'))return;
  const key='school-team-'+(bank.work||'igor')+'-'+user.id;
- let state=null,interval=null,enteredFullscreen=false;
+ let state=null,interval=null,enteredFullscreen=false,simulatedFullscreen=false;
  try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved?.version===VERSION&&[2,3,4].includes(saved.count)&&Array.isArray(saved.used)&&saved.used.every(id=>bank.questions.some(q=>q.id===id)))state=saved}catch{}
  const d=document.createElement('dialog');d.id='teamGame';d.className='team-game';
  d.innerHTML='<div class="tg-top"><div><span class="tg-eyebrow">КОМАНДНЫЙ ТУРНИР</span><h2>Своя игра</h2><p>'+esc(bank.title||'Слово о полку Игореве')+'</p></div><div class="tg-tools"><button type="button" id="tgFullscreen" aria-label="Полный экран">⛶ Полный экран</button><button type="button" id="tgClose">✕ Выйти</button></div></div><div id="tgContent"></div>';
  document.body.append(d);d.showModal();
  const el=id=>d.querySelector('#'+id);
  function save(){try{if(state)localStorage.setItem(key,JSON.stringify(state));else localStorage.removeItem(key)}catch{}}
- function close(){save();clearInterval(interval);if(enteredFullscreen&&document.fullscreenElement===d)document.exitFullscreen().catch(()=>{});d.close();d.remove()}
+ function syncFullscreen(){
+  const nativeFullscreen=document.fullscreenElement===document.documentElement||document.fullscreenElement===d;
+  if(!nativeFullscreen)simulatedFullscreen=false;
+  enteredFullscreen=nativeFullscreen||simulatedFullscreen;
+  d.classList.toggle('tg-fullscreen-mode',enteredFullscreen);
+  const button=el('tgFullscreen');
+  if(button)button.textContent=enteredFullscreen?'↙ Выйти из полного экрана':'⛶ Полный экран';
+ }
+ async function close(){
+  save();clearInterval(interval);simulatedFullscreen=false;
+  if(document.fullscreenElement&&(document.fullscreenElement===document.documentElement||document.fullscreenElement===d)){
+   try{await document.exitFullscreen()}catch{}
+  }
+  d.classList.remove('tg-fullscreen-mode');d.close();d.remove();
+ }
  el('tgClose').onclick=close;d.addEventListener('cancel',e=>{e.preventDefault();close()});
- el('tgFullscreen').onclick=async()=>{try{if(document.fullscreenElement===d){await document.exitFullscreen();enteredFullscreen=false}else{await d.requestFullscreen();enteredFullscreen=true}}catch{el('tgFullscreen').textContent='Открыть полный экран'} };
- d.addEventListener('fullscreenchange',()=>{enteredFullscreen=document.fullscreenElement===d;el('tgFullscreen').textContent=enteredFullscreen?'↙ Выйти из полного экрана':'⛶ Полный экран'});
+ el('tgFullscreen').onclick=async()=>{
+  if(enteredFullscreen){
+   simulatedFullscreen=false;
+   if(document.fullscreenElement){try{await document.exitFullscreen()}catch{}}
+   syncFullscreen();return;
+  }
+  try{
+   if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();
+   else simulatedFullscreen=true;
+  }catch{simulatedFullscreen=true}
+  syncFullscreen();
+ };
+ document.addEventListener('fullscreenchange',syncFullscreen);
  function scores(){return '<div class="tg-scores">'+state.scores.map((score,i)=>`<div class="tg-score tg-team-${i} ${state.turn===i&&state.phase!=='finished'?'is-turn':''}"><span>Команда ${i+1}</span><strong>${score}<small> баллов</small></strong>${state.turn===i&&state.phase!=='finished'?'<em>Выбирает вопрос</em>':''}</div>`).join('')+'</div>'}
  function bar(text){return `<div class="tg-status"><h3>${esc(text)}</h3>${state.deadline?'<span class="tg-clock" id="tgClock" role="timer"></span>':''}</div>`}
  function setup(){el('tgContent').innerHTML=`<div class="tg-setup"><p class="tg-eyebrow">25 ВОПРОСОВ · 5 КАТЕГОРИЙ</p><h3>Сколько команд участвует?</h3><div class="tg-counts">${[2,3,4].map(n=>`<button data-count="${n}"><strong>${n}</strong><span>команды</span></button>`).join('')}</div><ul><li>Выбор вопроса — 1 минута. Ответ — до 2 минут на каждую команду.</li><li>Вопросы стоят от 10 до 50 баллов. Ошибка или отсутствие ответа — 0 баллов.</li><li>Иногда открывается перехват: отвечает команда, выбравшая вопрос, затем остальные по номеру. Номер команды появляется на выбранном варианте.</li><li>Если первая команда ответила верно, все баллы получает она. Иначе правильно ответившие соперники делят стоимость вопроса, округляя вниз.</li><li>Ответы команд вводит учитель. Правильный ответ откроется, когда все участвующие команды закончат отвечать.</li></ul><p class="tg-note">Игру можно свернуть и продолжить на этом устройстве. Текущий таймер продолжает идти.</p></div>`;d.querySelectorAll('[data-count]').forEach(b=>b.onclick=()=>{state=createGame(Number(b.dataset.count));save();render()})}
