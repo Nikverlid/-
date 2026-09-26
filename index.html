@@ -488,7 +488,7 @@
     function registerWebMCP(){const ctx=document.modelContext;if(!ctx?.registerTool)return;const controller=new AbortController();const register=(tool)=>Promise.resolve(ctx.registerTool(tool,{signal:controller.signal})).catch(()=>{});register({name:'open_literature_game',title:'Открыть литературную игру',description:'Открывает один из трёх режимов для выбранного произведения.',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['truth','board','crossword']}},required:['mode'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:({mode})=>{if(mode==='truth'){startTruth();show('truth')}else if(mode==='board'){resetBoard();show('boardgame')}else{resetCrossword();show('crossword')}return{opened:mode}}});register({name:'read_available_activities',title:'Показать доступные игры',description:'Возвращает список доступных игровых заданий и их объём.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({grade:9,works:['Слово о полку Игореве','Бедная Лиза','Лафертовская маковница','Горе от ума','Мёртвые души'],activities:[{id:'truth',cards:10,pool:truthFacts.length},{id:'board',cells:31,difficulties:{easy:{questions:questionBanks.easy.length,lossAfter:null},medium:{questions:questionBanks.medium.length,lossAfter:10},expert:{questions:questionBanks.expert.length,lossAfter:5}}},{id:'crossword',words:crosswordWords.length}]})})}
     // Account-controlled activities are launched through school.js.
   </script>
-  <script src="school.js?v=19"></script>
+  <script src="school.js?v=20"></script>
 </body>
 </html>
 
