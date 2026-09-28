@@ -48,10 +48,24 @@
  async function studentHomework(){
   await refresh();const active=dash.homework.filter(h=>h.active&&h.class===user.class);const cards=active.map(h=>{const runs=dash.attempts.filter(a=>a.homework_id===h.id),unfinished=runs.find(a=>!a.finished),finished=runs.filter(a=>a.finished),remaining=Math.max(0,h.attempts-runs.length),best=finished.length?Math.max(...finished.map(a=>Number(a.percent))):null,canPlay=!!unfinished||remaining>0;let status;if(unfinished)status='Начато — можно продолжить';else if(best!==null&&remaining>0)status=`Лучший результат: ${best.toFixed(1)}% · осталось попыток: ${remaining}`;else if(best!==null)status=`Выполнено · результат: ${best.toFixed(1)}%`;else status=`Не начато · попыток: ${remaining}`;return `<article class="school-detail student-hw-card"><div><span class="student-hw-work">${esc(titles[h.work])}</span><h3>${esc(games[h.game])}</h3><p class="student-due-date">Задание к следующему уроку литературы: <b>${esc(formatDate(homeworkLesson(h)))}</b></p><p class="school-muted">${esc(status)}</p></div><button type="button" data-open-homework="${h.id}" class="${canPlay?'primary':''}" ${canPlay?'':'disabled'}>${unfinished?'Продолжить':remaining>0?'Начать':'Готово'}</button></article>`}).join('');const nearest=formatDate(lessonDate(new Date()));const d=modal('Моё ДЗ',`<p class="student-next-lesson">Ближайший урок литературы: <b>${esc(nearest)}</b></p><p class="school-muted">Здесь отображаются задания, которые учитель сейчас открыл для ${esc(user.class)} класса. У каждого задания указана дата урока, к которому оно задано.</p><div id="studentHomeworkList">${cards||'<p class="school-muted hw-empty">Сейчас открытых домашних заданий нет.</p>'}</div>`,'student-homework');d.querySelectorAll('[data-open-homework]').forEach(b=>b.onclick=async()=>{const h=active.find(x=>x.id===b.dataset.openHomework);if(!h||!playable(h)){b.disabled=true;return}selectWork(h.work);await start(h)});
  }
- async function teamGame(work=activeWork){
-  await refresh();if(!staff())throw Error('Нет доступа');
-  const bank=await api('team_questions',{work});const module=await import('./team-game.js?v=7');
-  module.openTeamGame(bank,user);
+ let teamGameBusy=false;
+ async function teamGame(work=activeWork,button=$('schoolTeamGame')){
+  if(teamGameBusy)return;
+  teamGameBusy=true;
+  const original=button?.innerHTML;
+  if(button){button.disabled=true;button.classList.add('is-loading');button.innerHTML='<span class="mode-icon">⏳</span><span><strong>Загружаю игру…</strong><small>Подожди несколько секунд</small></span>'}
+  let timeoutId;
+  try{
+   await refresh();if(!staff())throw Error('Нет доступа');
+   const request=api('team_questions',{work});
+   const bank=await Promise.race([request,new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('Сервер долго не отвечает. Нажми «Своя игра» ещё раз.')),15000)})]);
+   if(bank?.work!==work||!Array.isArray(bank.categories)||bank.categories.length!==5||!Array.isArray(bank.questions)||bank.questions.length!==25)throw Error('Для этой темы пока не загрузился полный набор вопросов. Попробуй ещё раз.');
+   const module=await import('./team-game.js?v=7');
+   module.openTeamGame(bank,user);
+  }finally{
+   clearTimeout(timeoutId);teamGameBusy=false;
+   if(button?.isConnected){button.disabled=false;button.classList.remove('is-loading');if(original)button.innerHTML=original}
+  }
  }
  window.syncTeamGameTile=work=>{
   $('schoolTeamGame')?.remove();
@@ -59,7 +73,7 @@
   const grid=document.querySelector('#book .mode-grid');if(!grid)return;
   const button=document.createElement('button');button.type='button';button.id='schoolTeamGame';button.className='mode';
   button.innerHTML='<span class="mode-icon">⚑</span><span><strong>Своя игра</strong><small>Командная викторина · 2–4 команды</small></span>';
-  button.addEventListener('click',()=>teamGame(work).catch(e=>notice(e.message)));
+  button.addEventListener('click',async()=>{try{await teamGame(work,button)}catch(e){notice(e.message||'Не удалось открыть игру')}});
   grid.append(button);
  };
  async function questions(){const d=modal('Вопросы и ответы',`<div class="school-row"><label>Произведение<select id="sqWork">${options(titles)}</select></label><label>Игра<select id="sqGame">${options(games)}</select></label></div><div id="sqList">Загружаем…</div>`);let seq=0;async function render(){const id=++seq;try{const data=await api('questions',{work:$('sqWork').value});if(id!==seq||!d.open)return;const g=$('sqGame').value;const qs=g==='truth'?data.truthFacts:g==='crossword'?data.crossword:data[g+'Quiz'];$('sqList').innerHTML=qs.map((q,i)=>`<div class="school-detail"><b>${i+1}. ${esc(g==='crossword'?q.clue:q[0])}</b>${g!=='crossword'&&g!=='truth'?'<ol>'+q[1].map(a=>'<li>'+esc(a)+'</li>').join('')+'</ol>':''}<p class="school-answer">Ответ: ${esc(g==='crossword'?q.word:g==='truth'?(q[1]?'Правда':'Ложь'):q[1][q[2]])}</p></div>`).join('')}catch(e){notice(e.message)}}$('sqWork').onchange=render;$('sqGame').onchange=render;await render()}
