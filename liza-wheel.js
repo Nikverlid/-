@@ -3,14 +3,31 @@ export async function openLizaWheel({user,request}){
  if(!['teacher','admin'].includes(user?.role))throw Error('Нет доступа');
  const existing=document.getElementById('lizaWheel');if(existing){existing.focus();return}
  const d=document.createElement('dialog');d.id='lizaWheel';d.setAttribute('aria-label','Бедная Лиза — колесо фортуны');
- let state=null,busy=false,closed=false,spinTimer=null,mode='wheel',expanded=false;
+ let state=null,busy=false,closed=false,spinTimer=null,mode='wheel',expanded=false,ownsFullscreen=false;
  d.innerHTML=`<header class="lw-head"><div><span class="lw-eyebrow">ОТКРЫТЫЙ УРОК · Н. М. КАРАМЗИН</span><h2>Бедная Лиза</h2><p>Колесо фортуны · за пределами эксперта</p></div><div class="lw-tools"><button data-lw="full">⛶ На весь экран</button><button data-lw="close" aria-label="Закрыть игру">✕ Закрыть</button></div></header><div class="lw-toolbar"><span id="lwProgress">Загружаем игру…</span><div><button data-lw="refresh">Обновить</button>${user.role==='admin'?'<button data-lw="edit">Участники</button>':''}<button data-lw="reset">Новая игра</button></div></div><p id="lwError" role="alert" hidden></p><section id="lwEditor" hidden><label for="lwNames">Имена участников — по одному на строку</label><p>Можно указать имя и фамилию. Этот список увидит учитель на своём устройстве.</p><textarea id="lwNames" rows="7" maxlength="2840" spellcheck="false" placeholder="Анна Иванова&#10;Никита Вершинин"></textarea><div><button data-lw="save" class="lw-primary">Сохранить участников</button><button data-lw="cancel-edit">Отмена</button></div></section><div class="lw-layout"><main class="lw-stage" id="lwStage"><p>Подключаемся…</p></main><aside class="lw-roster"><div class="lw-roster-head"><h3>Участники</h3><span>А → Я</span></div><div class="lw-legend"><span>+ верно</span><span>− неверно</span></div><ol id="lwPlayers" aria-label="Участники по алфавиту"></ol></aside></div>`;
  const $=id=>d.querySelector('#'+id);
  const on=(name,handler)=>d.querySelector('[data-lw="'+name+'"]')?.addEventListener('click',handler);
  const error=m=>{$('lwError').textContent=m||'';$('lwError').hidden=!m};
- function close(){closed=true;clearTimeout(spinTimer);d.close();d.remove()}
+ const fullscreenElement=()=>document.fullscreenElement||document.webkitFullscreenElement;
+ const fullscreenChanged=()=>{if(closed)return;if(ownsFullscreen&&!fullscreenElement()){ownsFullscreen=false;expanded=false;paintFullscreen()}};
+ function paintFullscreen(){d.classList.toggle('lw-expanded',expanded);d.querySelector('[data-lw="full"]').textContent=expanded?'↙ Выйти из полного экрана':'⛶ На весь экран'}
+ async function leaveFullscreen(){if(ownsFullscreen&&fullscreenElement()){const exit=document.exitFullscreen||document.webkitExitFullscreen;try{await exit?.call(document)}catch{}}ownsFullscreen=false}
+ function close(){closed=true;clearTimeout(spinTimer);document.removeEventListener('fullscreenchange',fullscreenChanged);document.removeEventListener('webkitfullscreenchange',fullscreenChanged);void leaveFullscreen();d.close();d.remove()}
  on('close',close);d.addEventListener('cancel',e=>{e.preventDefault();close()});
- on('full',()=>{expanded=!expanded;d.classList.toggle('lw-expanded',expanded);d.querySelector('[data-lw="full"]').textContent=expanded?'↙ Обычный размер':'⛶ На весь экран'});
+ document.addEventListener('fullscreenchange',fullscreenChanged);document.addEventListener('webkitfullscreenchange',fullscreenChanged);
+ on('full',async()=>{
+  if(expanded){await leaveFullscreen();expanded=false;paintFullscreen();return}
+  error('');
+  // Fullscreen the document, not the modal: browsers reject requestFullscreen on dialog elements.
+  const root=document.documentElement,requestFull=root.requestFullscreen||root.webkitRequestFullscreen;
+  if(!fullscreenElement()){
+   if(!requestFull){error('Этот браузер не поддерживает полноэкранный режим сайта. На компьютере нажмите F11.');return}
+   try{await requestFull.call(root);ownsFullscreen=true}catch{error('Браузер не разрешил полный экран. На компьютере можно нажать F11.');return}
+  }
+  if(closed){await leaveFullscreen();return}expanded=true;paintFullscreen();
+  // Put the modal above the new fullscreen layer without rebuilding game state.
+  if(d.open)d.close();d.showModal();
+ });
  document.body.append(d);d.showModal();
  function lock(value){busy=value;d.querySelectorAll('button').forEach(b=>{if(!['close','full'].includes(b.dataset.lw))b.disabled=value||(b.hasAttribute('data-choice')&&state?.active?.correct!==null)||(b.dataset.lw==='spin'&&state?.finished)})}
  async function call(action,data={}){
@@ -49,6 +66,7 @@ export async function openLizaWheel({user,request}){
  function render(){
   if(closed)return;
   $('lwProgress').textContent=`${state.asked} / ${state.total} вопросов · ${state.players.length} участников`;
+  $('lwPlayers').style.setProperty('--lw-count',Math.max(1,Math.min(state.players.length,15)));
   $('lwPlayers').innerHTML=[...state.players].sort((a,b)=>a.name.localeCompare(b.name,'ru',{sensitivity:'base',numeric:true})).map(p=>{const active=p.id===state.active?.playerId,pending=active&&state.active.correct===null,last=p.results.at(-1),status=pending||!last?'waiting':last.correct?'good':'bad';return `<li class="lw-player lw-${status} ${active?'lw-current':''}"><span class="lw-person-name">${esc(p.name)}${pending?'<small>Отвечает сейчас</small>':''}</span><span class="lw-signs" aria-label="${p.results.length?'Результаты ответов':'Ещё не отвечал'}">${p.results.map(r=>`<b class="${r.correct?'lw-plus':'lw-minus'}">${r.correct?'+':'−'}</b>`).join('')}</span></li>`}).join('');
   $('lwStage').innerHTML=mode==='question'&&state.active?question():wheel();
   on('spin',()=>change('wheel_spin',{},true));on('next',()=>change('wheel_spin',{},true));
