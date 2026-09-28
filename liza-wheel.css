@@ -6,3 +6,19 @@
 @media(max-width:720px){#lizaWheel{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0;padding:12px;padding-top:max(12px,env(safe-area-inset-top));padding-bottom:max(12px,env(safe-area-inset-bottom));gap:10px}.lw-layout{grid-template-columns:minmax(0,1fr) 145px;gap:9px}.lw-stage{padding:0 3px 15px}.lw-player{font-size:13px;min-height:52px;padding:8px 6px;gap:5px}.lw-roster-head{padding:12px 8px 5px}.lw-roster-head h3{font-size:15px}.lw-legend{padding:0 8px 8px;gap:6px;font-size:10px}.lw-signs{min-width:20px;max-width:30px}.lw-signs b{width:22px;height:23px;font-size:19px}.lw-tools{justify-content:flex-end}#lizaWheel .lw-tools button,#lizaWheel .lw-toolbar button{font-size:12px;padding:8px}#lizaWheel .lw-head p{font-size:11px}.lw-eyebrow{font-size:9px}#lwProgress{font-size:12px}.lw-toolbar{align-items:flex-start}.lw-toolbar>div{gap:5px}#lizaWheel .lw-spin{min-width:0;width:100%;font-size:16px}.lw-question-top{display:block;padding:10px}.lw-question-top strong{display:block;font-size:16px;margin-top:6px}#lizaWheel .lw-question h3{font-size:17px}#lizaWheel .lw-answers button{font-size:14px;padding:12px;gap:8px}.lw-answers button>span{min-width:80px}#lizaWheel .lw-wheel-caption{font-size:17px}.lw-empty{padding:20px 4px}.lw-empty h3{font-size:19px!important}.lw-empty p{font-size:13px}}
 
 #lizaWheel.lw-expanded{position:fixed}
+
+/* Keep the lesson in the viewport and fit a class of 15 into the roster. */
+#lizaWheel .lw-head,#lizaWheel .lw-toolbar{flex-shrink:0}
+#lizaWheel .lw-layout{overflow:hidden}
+#lizaWheel #lwPlayers{display:grid;grid-template-rows:repeat(var(--lw-count,15),minmax(29px,1fr));grid-auto-rows:minmax(29px,1fr);gap:3px;padding:2px 10px 10px;align-content:stretch}
+#lizaWheel .lw-player{min-height:29px;margin:0;padding:3px 9px;font-size:clamp(12px,1.05vw,17px);line-height:1.15;border-radius:7px;gap:6px}
+#lizaWheel .lw-person-name small{display:none}
+#lizaWheel .lw-signs b{height:22px;width:22px;font-size:20px}
+#lizaWheel .lw-roster-head{padding:10px 14px 5px}
+#lizaWheel .lw-legend{padding-bottom:8px}
+#lizaWheel.lw-expanded{padding:12px 20px;gap:8px;overflow:hidden}
+#lizaWheel.lw-expanded h2{font-size:30px}
+#lizaWheel.lw-expanded .lw-head p{display:none}
+#lizaWheel.lw-expanded .lw-toolbar{padding-bottom:7px}
+#lizaWheel.lw-expanded .lw-head button,#lizaWheel.lw-expanded .lw-toolbar button{padding:8px 12px}
+@media(max-height:750px) and (min-width:721px){#lizaWheel.lw-expanded .lw-eyebrow{display:none}#lizaWheel.lw-expanded h2{font-size:24px}#lizaWheel.lw-expanded .lw-roster-head h3{font-size:17px}#lizaWheel.lw-expanded .lw-player{font-size:13px}}
