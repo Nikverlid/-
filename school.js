@@ -13,8 +13,8 @@
  const homeworkLesson=h=>{const d=localDate(h.created_at);d.setDate(d.getDate()+1);return dateKey(lessonDate(d))};
  const formatDate=value=>localDate(value).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
  const classes=['7А','7Б','8А','8Б','9А','9Б'];
- for(const eventName of ['copy','cut','selectstart','contextmenu','dragstart'])document.addEventListener(eventName,e=>e.preventDefault(),true);
- document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['a','c','x'].includes(e.key.toLowerCase()))e.preventDefault()},true);
+ for(const eventName of ['copy','cut','selectstart','contextmenu','dragstart'])document.addEventListener(eventName,e=>{if(!e.target.closest?.('#lwEditor'))e.preventDefault()},true);
+ document.addEventListener('keydown',e=>{if(!e.target.closest?.('#lwEditor')&&(e.ctrlKey||e.metaKey)&&['a','c','x'].includes(e.key.toLowerCase()))e.preventDefault()},true);
  document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
  document.addEventListener('touchmove',e=>{if(e.touches?.length>1)e.preventDefault()},{passive:false});
  function savedToken(){try{const value=localStorage.getItem('schoolToken')||sessionStorage.getItem('schoolToken')||'';if(value){localStorage.setItem('schoolToken',value);sessionStorage.removeItem('schoolToken')}return value}catch{return sessionStorage.getItem('schoolToken')||''}}
@@ -25,7 +25,7 @@
  const grade=p=>p>=85?5:p>=70?4:p>=55?3:p>=40?2:p>=25?1:0;
  const options=o=>Object.entries(o).map(([v,t])=>`<option value="${v}">${esc(t)}</option>`).join('');
  const clsOptions=()=>classes.map(c=>`<option>${c}</option>`).join('');
- async function api(action,data={}){const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify({action,...data})});const json=await r.json();if(!r.ok||json.error)throw new Error(json.error||'Сервис временно недоступен');return json}
+ async function api(action,data={},signal){const r=await fetch(ENDPOINT,{method:'POST',signal,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify({action,...data})});const json=await r.json();if(!r.ok||json.error)throw new Error(json.error||'Сервис временно недоступен');return json}
  function notice(message){if(dialog?.open){let e=dialog.querySelector('.school-error');if(!e){e=document.createElement('p');e.className='school-error';dialog.append(e)}e.textContent=message}else alert(message)}
  function modal(title,html,extra=''){if(dialog){dialog.close();dialog.remove()}dialog=document.createElement('dialog');dialog.className='school-dialog school-ui '+extra;dialog.innerHTML=`<button class="school-close" aria-label="Закрыть">✕</button><h2>${esc(title)}</h2>${html}<p class="school-error" role="status"></p>`;document.body.append(dialog);dialog.querySelector('.school-close').onclick=()=>dialog.close();dialog.showModal();return dialog}
  function bind(id,fn){$(id).onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{await fn(e)}catch(err){notice(err.message)}finally{b.disabled=false}}}
@@ -68,13 +68,18 @@
   }
  }
  window.syncTeamGameTile=work=>{
-  $('schoolTeamGame')?.remove();
+  $('schoolTeamGame')?.remove();$('schoolLizaWheel')?.remove();
   if(!staff()||!titles[work])return;
   const grid=document.querySelector('#book .mode-grid');if(!grid)return;
   const button=document.createElement('button');button.type='button';button.id='schoolTeamGame';button.className='mode';
   button.innerHTML='<span class="mode-icon">⚑</span><span><strong>Своя игра</strong><small>Командная викторина · 2–4 команды</small></span>';
   button.addEventListener('click',async()=>{try{await teamGame(work,button)}catch(e){notice(e.message||'Не удалось открыть игру')}});
   grid.append(button);
+  if(work==='liza'){
+   const wheel=document.createElement('button');wheel.type='button';wheel.id='schoolLizaWheel';wheel.className='mode';
+   wheel.innerHTML='<span class="mode-icon">✦</span><span><strong>Колесо фортуны</strong><small>Открытый урок · 15 сложнейших вопросов</small></span>';
+   wheel.addEventListener('click',async()=>{if(wheel.disabled)return;wheel.disabled=true;try{const m=await import('./liza-wheel.js?v=1');await m.openLizaWheel({user,request:api})}catch(e){notice(e.message||'Не удалось открыть игру')}finally{wheel.disabled=false}});grid.append(wheel);
+  }
  };
  async function questions(){const d=modal('Вопросы и ответы',`<div class="school-row"><label>Произведение<select id="sqWork">${options(titles)}</select></label><label>Игра<select id="sqGame">${options(games)}</select></label></div><div id="sqList">Загружаем…</div>`);let seq=0;async function render(){const id=++seq;try{const data=await api('questions',{work:$('sqWork').value});if(id!==seq||!d.open)return;const g=$('sqGame').value;const qs=g==='truth'?data.truthFacts:g==='crossword'?data.crossword:data[g+'Quiz'];$('sqList').innerHTML=qs.map((q,i)=>`<div class="school-detail"><b>${i+1}. ${esc(g==='crossword'?q.clue:q[0])}</b>${g!=='crossword'&&g!=='truth'?'<ol>'+q[1].map(a=>'<li>'+esc(a)+'</li>').join('')+'</ol>':''}<p class="school-answer">Ответ: ${esc(g==='crossword'?q.word:g==='truth'?(q[1]?'Правда':'Ложь'):q[1][q[2]])}</p></div>`).join('')}catch(e){notice(e.message)}}$('sqWork').onchange=render;$('sqGame').onchange=render;await render()}
  async function homework(){await refresh();const d=modal('Домашка',`<p>Выбери класс в строке ниже, чтобы увидеть только его задания. После закрытия доступа задание исчезнет из списка; назначить его снова можно через форму.</p><p>Каждый уровень бродилки — отдельная игра. Повторное открытие задания к той же дате добавляет попытки к нему и сохраняет историю; на новую дату создаётся отдельное задание.</p><form id="hwForm"><div class="school-row"><label>Класс<select name="class">${clsOptions()}</select></label><label>Произведение<select name="work">${options(titles)}</select></label><label>Игра<select name="game">${options(games)}</select></label><label>Попыток<input name="attempts" type="number" min="1" max="100" value="1" required></label></div><button class="primary">Открыть доступ</button><button type="button" id="hwAll">Назначить все 5 игр</button></form><h3>Текущая домашка по классу</h3><div id="hwClasses" class="hw-classes">${classes.map(c=>`<button type="button" data-hw-class="${c}">${c}</button>`).join('')}</div><div id="hwList" aria-live="polite"></div>`);
@@ -138,4 +143,5 @@
  window.addEventListener('pageshow',e=>{if(e.persisted)location.reload()});
  if(token)enter().catch(e=>{token='';clearToken();gate('student',e.message)});else gate();
 })();
+
 
