@@ -22,3 +22,6 @@
 #lizaWheel.lw-expanded .lw-toolbar{padding-bottom:7px}
 #lizaWheel.lw-expanded .lw-head button,#lizaWheel.lw-expanded .lw-toolbar button{padding:8px 12px}
 @media(max-height:750px) and (min-width:721px){#lizaWheel.lw-expanded .lw-eyebrow{display:none}#lizaWheel.lw-expanded h2{font-size:24px}#lizaWheel.lw-expanded .lw-roster-head h3{font-size:17px}#lizaWheel.lw-expanded .lw-player{font-size:13px}}
+
+
+.lw-detail{margin-top:14px;border-top:1px solid #acc7b8;padding-top:12px}.lw-detail summary{cursor:pointer;font-weight:800}.lw-detail p{margin:12px 0!important;line-height:1.65}
