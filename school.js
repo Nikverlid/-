@@ -60,7 +60,7 @@
    const request=api('team_questions',{work});
    const bank=await Promise.race([request,new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('Сервер долго не отвечает. Нажми «Своя игра» ещё раз.')),15000)})]);
    if(bank?.work!==work||!Array.isArray(bank.categories)||bank.categories.length!==5||!Array.isArray(bank.questions)||bank.questions.length!==25)throw Error('Для этой темы пока не загрузился полный набор вопросов. Попробуй ещё раз.');
-   const module=await import('./team-game.js?v=9');
+   const module=await import('./team-game.js?v=10');
    module.openTeamGame(bank,user);
   }finally{
    clearTimeout(timeoutId);teamGameBusy=false;
