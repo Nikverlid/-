@@ -6,28 +6,50 @@ export function openTeamGame(bank,user){
  if(!['teacher','admin'].includes(user.role))throw Error('Нет доступа');
  if(document.getElementById('teamGame'))return;
  const key='school-team-'+(bank.work||'igor')+'-'+user.id;
- let state=null,interval=null,enteredFullscreen=false,simulatedFullscreen=false;
+ let state=null,interval=null,enteredFullscreen=false,ownsFullscreen=false,fullscreenBusy=false,closed=false;
  try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved?.version===VERSION&&[2,3,4].includes(saved.count)&&Array.isArray(saved.used)&&saved.used.every(id=>bank.questions.some(q=>q.id===id)))state=saved}catch{}
  const d=document.createElement('dialog');d.id='teamGame';d.className='team-game';
  d.innerHTML='<div class="tg-top"><div><span class="tg-eyebrow">КОМАНДНЫЙ ТУРНИР</span><h2>Своя игра</h2><p>'+esc(bank.title||'Слово о полку Игореве')+'</p></div><div class="tg-tools"><button type="button" id="tgFullscreen" aria-label="Полный экран">⛶ Полный экран</button><button type="button" id="tgClose">✕ Выйти</button></div></div><div id="tgContent"></div>';
  document.body.append(d);d.showModal();
  const el=id=>d.querySelector('#'+id);
  function save(){try{if(state)localStorage.setItem(key,JSON.stringify(state));else localStorage.removeItem(key)}catch{}}
+ const fullElement=()=>document.fullscreenElement||document.webkitFullscreenElement;
  function syncFullscreen(){
-  enteredFullscreen=simulatedFullscreen;
+  enteredFullscreen=!!fullElement();
   d.classList.toggle('tg-fullscreen-mode',enteredFullscreen);
   const button=el('tgFullscreen');
-  if(button)button.textContent=enteredFullscreen?'↙ Выйти из полного экрана':'⛶ Полный экран';
+  if(button){button.textContent=enteredFullscreen?'↙ Выйти из полного экрана':'⛶ Полный экран';button.setAttribute('aria-label',enteredFullscreen?'Выйти из полного экрана':'Полный экран')}
  }
+ async function leaveFullscreen(){
+  if(ownsFullscreen&&fullElement()){const exit=document.exitFullscreen||document.webkitExitFullscreen;try{await exit?.call(document)}catch{}}
+  ownsFullscreen=false;
+ }
+ function fullscreenChanged(){if(!closed){if(!fullElement())ownsFullscreen=false;syncFullscreen()}}
  function close(){
-  save();clearInterval(interval);simulatedFullscreen=false;enteredFullscreen=false;
-  d.classList.remove('tg-fullscreen-mode');d.close();d.remove();
+  closed=true;save();clearInterval(interval);
+  document.removeEventListener('fullscreenchange',fullscreenChanged);document.removeEventListener('webkitfullscreenchange',fullscreenChanged);
+  void leaveFullscreen();d.close();d.remove();
  }
- el('tgClose').onclick=close;d.addEventListener('cancel',e=>{e.preventDefault();close()});
- el('tgFullscreen').onclick=()=>{
-  simulatedFullscreen=!simulatedFullscreen;
-  syncFullscreen();
+ document.addEventListener('fullscreenchange',fullscreenChanged);document.addEventListener('webkitfullscreenchange',fullscreenChanged);
+ el('tgClose').onclick=close;d.addEventListener('cancel',e=>{e.preventDefault();if(fullElement()){void leaveFullscreen();return}close()});
+ el('tgFullscreen').onclick=async()=>{
+  if(fullscreenBusy)return;fullscreenBusy=true;
+  el('tgFullscreen').disabled=true;
+  try{
+   if(fullElement()){const exit=document.exitFullscreen||document.webkitExitFullscreen;await exit?.call(document);ownsFullscreen=false}
+   else{
+    const root=document.documentElement,request=root.requestFullscreen||root.webkitRequestFullscreen;
+    if(!request)throw Error('Полноэкранный режим недоступен в этом браузере. На компьютере можно нажать F11.');
+    await request.call(root);ownsFullscreen=true;
+    if(closed){await leaveFullscreen();return}
+    // Restore the modal above the fullscreen document without recreating the game.
+    if(d.open)d.close();d.showModal();
+   }
+   syncFullscreen();
+  }catch(e){if(!closed){let msg=el('tgFullscreenError');if(!msg){msg=document.createElement('p');msg.id='tgFullscreenError';msg.setAttribute('role','alert');d.querySelector('.tg-top').after(msg)}msg.textContent='Не удалось включить полный экран. '+(e.message||'Нажмите F11.');syncFullscreen()}}
+  finally{fullscreenBusy=false;if(!closed)el('tgFullscreen').disabled=false}
  };
+ syncFullscreen();
 
  function scores(){return '<div class="tg-scores">'+state.scores.map((score,i)=>`<div class="tg-score tg-team-${i} ${state.turn===i&&state.phase!=='finished'?'is-turn':''}"><span>Команда ${i+1}</span><strong>${score}<small> баллов</small></strong>${state.turn===i&&state.phase!=='finished'?'<em>Выбирает вопрос</em>':''}</div>`).join('')+'</div>'}
  function bar(text){return `<div class="tg-status"><h3>${esc(text)}</h3>${state.deadline?'<span class="tg-clock" id="tgClock" role="timer"></span>':''}</div>`}
@@ -60,6 +82,6 @@ export function openTeamGame(bank,user){
  if(el('tgRestart'))el('tgRestart').onclick=()=>{if(confirm('Начать новый турнир? Счёт этой игры будет сброшен.'))reset()};clock();
  }
  function clock(){if(!state)return;if(tick(state,bank)){save();render();return}const c=el('tgClock');if(c){const sec=Math.max(0,Math.ceil((state.deadline-Date.now())/1000));c.textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');c.classList.toggle('tg-urgent',sec<=10)}}
- try{render();interval=setInterval(clock,200)}catch(e){clearInterval(interval);d.close();d.remove();throw e}
+ try{render();interval=setInterval(clock,200)}catch(e){close();throw e}
 }
 
