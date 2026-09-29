@@ -60,7 +60,7 @@
    const request=api('team_questions',{work});
    const bank=await Promise.race([request,new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('Сервер долго не отвечает. Нажми «Своя игра» ещё раз.')),15000)})]);
    if(bank?.work!==work||!Array.isArray(bank.categories)||bank.categories.length!==5||!Array.isArray(bank.questions)||bank.questions.length!==25)throw Error('Для этой темы пока не загрузился полный набор вопросов. Попробуй ещё раз.');
-   const module=await import('./team-game.js?v=7');
+   const module=await import('./team-game.js?v=8');
    module.openTeamGame(bank,user);
   }finally{
    clearTimeout(timeoutId);teamGameBusy=false;
@@ -78,10 +78,19 @@
   if(work==='liza'){
    const wheel=document.createElement('button');wheel.type='button';wheel.id='schoolLizaWheel';wheel.className='mode';
    wheel.innerHTML='<span class="mode-icon">✦</span><span><strong>Колесо фортуны</strong><small>Открытый урок · 15 сложнейших вопросов</small></span>';
-   wheel.addEventListener('click',async()=>{if(wheel.disabled)return;wheel.disabled=true;try{const m=await import('./liza-wheel.js?v=2');await m.openLizaWheel({user,request:api})}catch(e){notice(e.message||'Не удалось открыть игру')}finally{wheel.disabled=false}});grid.append(wheel);
+   wheel.addEventListener('click',async()=>{if(wheel.disabled)return;wheel.disabled=true;try{const m=await import('./liza-wheel.js?v=3');await m.openLizaWheel({user,request:api})}catch(e){notice(e.message||'Не удалось открыть игру')}finally{wheel.disabled=false}});grid.append(wheel);
   }
  };
- async function questions(){const d=modal('Вопросы и ответы',`<div class="school-row"><label>Произведение<select id="sqWork">${options(titles)}</select></label><label>Игра<select id="sqGame">${options(games)}</select></label></div><div id="sqList">Загружаем…</div>`);let seq=0;async function render(){const id=++seq;try{const data=await api('questions',{work:$('sqWork').value});if(id!==seq||!d.open)return;const g=$('sqGame').value;const qs=g==='truth'?data.truthFacts:g==='crossword'?data.crossword:data[g+'Quiz'];$('sqList').innerHTML=qs.map((q,i)=>`<div class="school-detail"><b>${i+1}. ${esc(g==='crossword'?q.clue:q[0])}</b>${g!=='crossword'&&g!=='truth'?'<ol>'+q[1].map(a=>'<li>'+esc(a)+'</li>').join('')+'</ol>':''}<p class="school-answer">Ответ: ${esc(g==='crossword'?q.word:g==='truth'?(q[1]?'Правда':'Ложь'):q[1][q[2]])}</p></div>`).join('')}catch(e){notice(e.message)}}$('sqWork').onchange=render;$('sqGame').onchange=render;await render()}
+ async function questions(){
+  const d=modal('Вопросы и ответы',`<div class="school-row"><label>Произведение<select id="sqWork">${options(titles)}</select></label><label>Игра<select id="sqGame"></select></label></div><div id="sqList">Загружаем…</div>`);let seq=0;
+  function choices(){const previous=$('sqGame').value;const modes={...games,...($('sqWork').value==='liza'?{wheel:'Колесо фортуны'}:{})};$('sqGame').innerHTML=options(modes);if(modes[previous])$('sqGame').value=previous}
+  async function render(){const id=++seq,work=$('sqWork').value,g=$('sqGame').value;$('sqList').textContent='Загружаем…';try{
+   const data=await api(g==='wheel'?'wheel_questions':'questions',{work});if(id!==seq||!d.open)return;
+   if(g==='wheel'){$('sqList').innerHTML=data.questions.map((q,i)=>`<div class="school-detail"><b>${i+1}. ${esc(q.text)}</b><ol>${q.choices.map(a=>`<li>${esc(a)}</li>`).join('')}</ol><p class="school-answer">Ответ: ${esc(q.choices[q.correct])}</p><p>${esc(q.explanation)}</p><details class="lw-detail"><summary>Подробный разбор ответа</summary>${(q.detail||[]).map(p=>`<p>${esc(p)}</p>`).join('')}</details></div>`).join('');return}
+   const qs=g==='truth'?data.truthFacts:g==='crossword'?data.crossword:data[g+'Quiz'];$('sqList').innerHTML=qs.map((q,i)=>`<div class="school-detail"><b>${i+1}. ${esc(g==='crossword'?q.clue:q[0])}</b>${g!=='crossword'&&g!=='truth'?'<ol>'+q[1].map(a=>'<li>'+esc(a)+'</li>').join('')+'</ol>':''}<p class="school-answer">Ответ: ${esc(g==='crossword'?q.word:g==='truth'?(q[1]?'Правда':'Ложь'):q[1][q[2]])}</p></div>`).join('');
+  }catch(e){if(id===seq&&d.open)$('sqList').textContent=e.message}}
+  $('sqWork').onchange=()=>{choices();render()};$('sqGame').onchange=render;choices();await render();
+ }
  async function homework(){await refresh();const d=modal('Домашка',`<p>Выбери класс в строке ниже, чтобы увидеть только его задания. После закрытия доступа задание исчезнет из списка; назначить его снова можно через форму.</p><p>Каждый уровень бродилки — отдельная игра. Повторное открытие задания к той же дате добавляет попытки к нему и сохраняет историю; на новую дату создаётся отдельное задание.</p><form id="hwForm"><div class="school-row"><label>Класс<select name="class">${clsOptions()}</select></label><label>Произведение<select name="work">${options(titles)}</select></label><label>Игра<select name="game">${options(games)}</select></label><label>Попыток<input name="attempts" type="number" min="1" max="100" value="1" required></label></div><button class="primary">Открыть доступ</button><button type="button" id="hwAll">Назначить все 5 игр</button></form><h3>Текущая домашка по классу</h3><div id="hwClasses" class="hw-classes">${classes.map(c=>`<button type="button" data-hw-class="${c}">${c}</button>`).join('')}</div><div id="hwList" aria-live="polite"></div>`);
   $('hwForm').elements.class.value=homeworkClass;
   const openAssignment=async h=>{const due=homeworkLesson({created_at:new Date().toISOString()}),matches=dash.homework.filter(x=>x.class===h.class&&x.work===h.work&&x.game===h.game&&homeworkLesson(x)===due).sort((a,b)=>Number(b.active)-Number(a.active)||new Date(b.created_at)-new Date(a.created_at));if(matches.length)return api('reactivate_homework',{id:matches[0].id,attempts:Number(h.attempts)});return api('assign',{...h,attempts:Number(h.attempts)})};
@@ -143,5 +152,6 @@
  window.addEventListener('pageshow',e=>{if(e.persisted)location.reload()});
  if(token)enter().catch(e=>{token='';clearToken();gate('student',e.message)});else gate();
 })();
+
 
 
