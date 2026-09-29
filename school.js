@@ -78,7 +78,7 @@
   if(work==='liza'){
    const wheel=document.createElement('button');wheel.type='button';wheel.id='schoolLizaWheel';wheel.className='mode';
    wheel.innerHTML='<span class="mode-icon">✦</span><span><strong>Колесо фортуны</strong><small>Открытый урок · 15 сложнейших вопросов</small></span>';
-   wheel.addEventListener('click',async()=>{if(wheel.disabled)return;wheel.disabled=true;try{const m=await import('./liza-wheel.js?v=4');await m.openLizaWheel({user,request:api})}catch(e){notice(e.message||'Не удалось открыть игру')}finally{wheel.disabled=false}});grid.append(wheel);
+   wheel.addEventListener('click',async()=>{if(wheel.disabled)return;wheel.disabled=true;try{const m=await import('./liza-wheel.js?v=5');await m.openLizaWheel({user,request:api})}catch(e){notice(e.message||'Не удалось открыть игру')}finally{wheel.disabled=false}});grid.append(wheel);
   }
  };
  async function questions(){
