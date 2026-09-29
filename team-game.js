@@ -1,4 +1,4 @@
-import {VERSION,createGame,chooseQuestion,answer,nextRound,tick} from './team-engine.mjs?v=2';
+import {VERSION,createGame,chooseQuestion,answer,nextRound,tick} from './team-engine.mjs?v=3';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const letters=['А','Б','В','Г'];
@@ -73,11 +73,12 @@ export function openTeamGame(bank,user){
  else if(state.phase==='missed')html+=`<div class="tg-explanation"><h3>Время выбора вышло</h3><p>Команда ${state.turn+1} не выбрала вопрос за 1 минуту. Ход пропущен, очки не изменились.</p><button id="tgNext" class="tg-primary">Ход команды ${(state.turn+1)%state.count+1} →</button></div>`;
  else if(state.phase==='finished'){
  const ranking=state.scores.map((score,team)=>({score,team})).sort((a,b)=>b.score-a.score),best=ranking[0].score,winners=ranking.filter(x=>x.score===best);
- html+=`<section class="tg-finish tg-results"><span class="tg-trophy">🏆</span><h3>${winners.length===1?'Победила команда '+(winners[0].team+1):'Победу разделили команды '+winners.map(x=>x.team+1).join(', ')}</h3><p>Итоги по набранным баллам · завершено вопросов: ${state.used.length-(state.round&&state.last===null?1:0)} из ${bank.questions.length}</p><div class="tg-podium">${ranking.map(x=>{const place=1+ranking.filter(y=>y.score>x.score).length;return `<article class="tg-place tg-place-${place}"><span class="tg-medal">${['🥇','🥈','🥉'][place-1]||'✦'}</span><span class="tg-place-label">${place} место</span><h4>Команда ${x.team+1}</h4><strong>${x.score}<small> баллов</small></strong></article>`}).join('')}</div><button id="tgNew" class="tg-primary">Новая игра</button></section>`;
+ html+=`<section class="tg-finish tg-results"><span class="tg-trophy">🏆</span><h3>${winners.length===1?'Победила команда '+(winners[0].team+1):'Победу разделили команды '+winners.map(x=>x.team+1).join(', ')}</h3><p>Итоги по набранным баллам · завершено вопросов: ${state.used.length-(state.round&&state.last===null?1:0)} из ${bank.questions.length}</p><div class="tg-podium">${ranking.map(x=>{const place=1+new Set(ranking.filter(y=>y.score>x.score).map(y=>y.score)).size;return `<article class="tg-place tg-place-${place}"><span class="tg-medal">${['🥇','🥈','🥉'][place-1]||'✦'}</span><span class="tg-place-label">${place} место</span><h4>Команда ${x.team+1}</h4><strong>${x.score}<small> баллов</small></strong></article>`}).join('')}</div><button id="tgNew" class="tg-primary">Новая игра</button></section>`;
  }
 
  html+=`<footer class="tg-footer"><span>Сыграно: ${state.used.length} / ${bank.questions.length}</span>${state.phase!=='finished'?'<div class="tg-footer-actions"><button id="tgRestart">Новая игра</button><button id="tgResults" class="tg-primary">Итоги</button></div>':''}<button id="tgFooterFullscreen" class="tg-full-exit">↙ Выйти из полного экрана</button><details><summary>Правила и источники</summary><p>1 минута на выбор, 2 минуты на ответ каждой команды. При перехвате первой отвечает команда, выбравшая вопрос, затем остальные по номеру. Правильный ответ первой команды приносит ей всю стоимость. При её ошибке стоимость делится между правильно ответившими соперниками с округлением вниз. За ошибки очки не снимаются. После вопроса ход переходит следующей команде по кругу.</p>${(bank.sources||[]).map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title)}</a>`).join(' · ')}</details></footer>`;
  el('tgContent').innerHTML=html;
+ if(state.phase==='finished')d.scrollTop=0;
  if(el('tgResults'))el('tgResults').onclick=()=>{state.phase='finished';state.deadline=null;save();render();d.scrollTop=0};
  if(el('tgFooterFullscreen'))el('tgFooterFullscreen').onclick=()=>el('tgFullscreen').onclick();
  d.querySelectorAll('[data-question]').forEach(b=>b.onclick=()=>{tick(state,bank);if(chooseQuestion(state,b.dataset.question,bank))save();render()});
