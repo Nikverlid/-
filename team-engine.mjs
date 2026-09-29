@@ -22,7 +22,7 @@ function record(s,choice,bank,now) {
   const q=bank.questions.find(q=>q.id===r.id),awards=Array(s.count).fill(0);
   if(r.answers[r.owner]===q.correct)awards[r.owner]=q.value;
   else if(r.steal){const winners=r.order.filter(i=>i!==r.owner&&r.answers[i]===q.correct);if(winners.length)winners.forEach(i=>awards[i]=Math.floor(q.value/winners.length))}
-  awards.forEach((v,i)=>s.scores[i]+=v);s.last={awards};s.phase='reveal';s.deadline=null;
+  awards.forEach((v,i)=>s.scores[i]+=v);s.last={awards};s.phase=s.used.length===bank.questions.length?'finished':'reveal';s.deadline=null;
 }
 export function nextRound(s,bank,now=Date.now()) {
   if(s.phase!=='reveal'&&s.phase!=='missed')return false;
@@ -31,6 +31,7 @@ export function nextRound(s,bank,now=Date.now()) {
 }
 export function tick(s,bank,now=Date.now()) {
   let changed=false;
+  if(s.phase==='reveal'&&s.used.length===bank.questions.length){s.phase='finished';s.deadline=null;return true}
   while(s.deadline!==null&&now>=s.deadline&&['select','answer'].includes(s.phase)){
     changed=true;const at=s.deadline;
     if(s.phase==='select'){s.phase='missed';s.deadline=null;s.last={message:'Время выбора вышло. Ход переходит следующей команде.'}}
