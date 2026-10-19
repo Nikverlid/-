@@ -1,7 +1,7 @@
 /* Server-authoritative school accounts and homework. */
 (() => {
  'use strict';
- const ENDPOINT='https://qnhkmasocibvqcedcevm.supabase.co/functions/v1/school-api';
+ const ENDPOINT='https://mgoncxhbyqufswuouuja.supabase.co/functions/v1/school-api';
  const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const titles={igor:'Слово о полку Игореве',liza:'Бедная Лиза',laf:'Лафертовская маковница',gore:'Горе от ума',souls:'Мёртвые души'};
  const games={truth:'Правда или ложь',crossword:'Кроссворд',easy:'Бродилка · лёгкий',medium:'Бродилка · средний',expert:'Бродилка · эксперт'};
