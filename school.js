@@ -13,8 +13,8 @@
  const homeworkLesson=h=>{const d=localDate(h.created_at);d.setDate(d.getDate()+1);return dateKey(lessonDate(d))};
  const formatDate=value=>localDate(value).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
  const classes=['7А','7Б','8А','8Б','9А','9Б'];
- for(const eventName of ['copy','cut','selectstart','contextmenu','dragstart'])document.addEventListener(eventName,e=>{if(!e.target.closest?.('#lwEditor'))e.preventDefault()},true);
- document.addEventListener('keydown',e=>{if(!e.target.closest?.('#lwEditor')&&(e.ctrlKey||e.metaKey)&&['a','c','x'].includes(e.key.toLowerCase()))e.preventDefault()},true);
+ for(const eventName of ['copy','cut','selectstart','contextmenu','dragstart'])document.addEventListener(eventName,e=>{if(!e.target.closest?.('#lwEditor, #oqEditor'))e.preventDefault()},true);
+ document.addEventListener('keydown',e=>{if(!e.target.closest?.('#lwEditor, #oqEditor')&&(e.ctrlKey||e.metaKey)&&['a','c','x'].includes(e.key.toLowerCase()))e.preventDefault()},true);
  document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
  document.addEventListener('touchmove',e=>{if(e.touches?.length>1)e.preventDefault()},{passive:false});
  function savedToken(){try{const value=localStorage.getItem('schoolToken')||sessionStorage.getItem('schoolToken')||'';if(value){localStorage.setItem('schoolToken',value);sessionStorage.removeItem('schoolToken')}return value}catch{return sessionStorage.getItem('schoolToken')||''}}
@@ -39,9 +39,10 @@
  function downloadLauncher(){if(user?.role!=='admin')return;const link=document.createElement('a');link.href='https://tlauncher.org/exe';link.download='TLauncher-Setup.exe';link.rel='noopener noreferrer';document.body.append(link);link.click();link.remove()}
  async function enter(){await refresh();if(staff())await hydrate();$('schoolGate')?.remove();document.body.classList.remove('school-loading');document.body.classList.toggle('student-mode',!staff());attempt=null;show('home');$('schoolNav')?.remove();const nav=document.createElement('nav');nav.id='schoolNav';nav.className='school-nav school-ui';nav.innerHTML=`<span class="school-name">${esc(user.name)}${user.class?' · '+esc(user.class):''}</span>${staff()?'<button id="schoolQuestions">Вопросы</button><button id="schoolHomework">Домашка</button>':'<button id="schoolMyHomework" class="primary">ДЗ</button>'}<button id="schoolResults">${staff()?'Результаты':'Мои результаты'}</button>${user.role==='admin'?'<button id="schoolAccounts">Аккаунты</button><button id="schoolLauncher" type="button" class="primary" aria-label="Скачать установщик TLauncher для Windows" title="Скачать установщик TLauncher для Windows">?</button>':''}<button id="schoolPassword">Пароль</button><button id="schoolLogout">Выйти</button>`;$('home').prepend(nav);
   if(staff()){bind('schoolQuestions',questions);bind('schoolHomework',homework)}else bind('schoolMyHomework',studentHomework);if(user.role==='admin'){bind('schoolAccounts',accounts);bind('schoolLauncher',downloadLauncher)}bind('schoolResults',results);bind('schoolPassword',changePassword);bind('schoolLogout',async()=>{try{await api('logout')}finally{token='';clearToken();location.reload()}});
-  const cb=document.querySelector('.class-button');if(!staff()){cb.textContent=user.class;cb.setAttribute('aria-label','Открыть задания класса '+user.class);document.querySelector('#works .eyebrow').textContent=user.class+' класс'}locks();
+  $('grade10Button').hidden=!staff();bind('schoolOblomovQuiz',async()=>{if(!staff())return;const b=$('schoolOblomovQuiz');b.disabled=true;try{const m=await import('./oblomov-quiz.js?v=1');await m.openOblomovQuiz({user,request:api})}catch(e){notice(e.message||'Не удалось загрузить опросник')}finally{b.disabled=false}});const cb=document.querySelector('.class-button');if(!staff()){cb.textContent=user.class;cb.setAttribute('aria-label','Открыть задания класса '+user.class);document.querySelector('#works .eyebrow').textContent=user.class+' класс'}locks();
   if(user.role==='student'&&!user.onboarding_done)onboarding();
  }
+ document.addEventListener('click',e=>{const b=e.target.closest?.('[data-go]');if(b&&['works10','oblomovBook'].includes(b.dataset.go)&&!staff()){e.preventDefault();e.stopImmediatePropagation()}},true);
  function available(w,g){if(!dash)return null;return dash.homework.find(h=>h.active&&h.work===w&&h.game===g&&h.class===user.class)}
  function playable(h){return !!h&&(dash.attempts.some(a=>a.homework_id===h.id&&!a.finished)||dash.attempts.filter(a=>a.homework_id===h.id).length<h.attempts)}
  function locks(){if(!user||staff())return;document.querySelectorAll('[data-work]').forEach(b=>b.classList.toggle('school-locked',!Object.keys(games).some(g=>playable(available(b.dataset.work,g)))));document.querySelectorAll('[data-start]').forEach(b=>{const gs=b.dataset.start==='board'?['easy','medium','expert']:[b.dataset.start];b.classList.toggle('school-locked',!gs.some(g=>playable(available(activeWork,g))))})}
@@ -83,10 +84,11 @@
   }
  };
  async function questions(){
-  const d=modal('Вопросы и ответы',`<div class="school-row"><label>Произведение<select id="sqWork">${options(titles)}</select></label><label>Игра<select id="sqGame"></select></label></div><div id="sqList">Загружаем…</div>`);let seq=0;
-  function choices(){const previous=$('sqGame').value;const modes={...games,...($('sqWork').value==='liza'?{wheel:'Колесо фортуны'}:{})};$('sqGame').innerHTML=options(modes);if(modes[previous])$('sqGame').value=previous}
+  const d=modal('Вопросы и ответы',`<div class="school-row"><label>Произведение<select id="sqWork">${options({...titles,oblomov:'Обломов'})}</select></label><label>Игра<select id="sqGame"></select></label></div><div id="sqList">Загружаем…</div>`);let seq=0;
+  function choices(){const previous=$('sqGame').value;const modes=$('sqWork').value==='oblomov'?{questionnaire:'Опросник'}:{...games,...($('sqWork').value==='liza'?{wheel:'Колесо фортуны'}:{})};$('sqGame').innerHTML=options(modes);if(modes[previous])$('sqGame').value=previous}
   async function render(){const id=++seq,work=$('sqWork').value,g=$('sqGame').value;$('sqList').textContent='Загружаем…';try{
-   const data=await api(g==='wheel'?'wheel_questions':'questions',{work});if(id!==seq||!d.open)return;
+   const data=await api(g==='questionnaire'?'oblomov_questions':g==='wheel'?'wheel_questions':'questions',{work});if(id!==seq||!d.open)return;
+   if(g==='questionnaire'){const m=await import('./oblomov-quiz.js?v=1');if(id!==seq||!d.open)return;$('sqList').innerHTML=data.questions.map((q,i)=>`<div class="school-detail"><p>${esc(q.level)}</p><b>${i+1}. ${esc(q.text)}</b><ol>${q.choices.map(a=>`<li>${esc(a)}</li>`).join('')}</ol><p class="school-answer">Ответ: ${esc(q.choices[q.correct])}</p>${m.explanationHTML(q,data.source)}</div>`).join('');return}
    if(g==='wheel'){$('sqList').innerHTML=data.questions.map((q,i)=>`<div class="school-detail"><b>${i+1}. ${esc(q.text)}</b><ol>${q.choices.map(a=>`<li>${esc(a)}</li>`).join('')}</ol><p class="school-answer">Ответ: ${esc(q.choices[q.correct])}</p><p>${esc(q.explanation)}</p><details class="lw-detail"><summary>Подробный разбор ответа</summary>${(q.detail||[]).map(p=>`<p>${esc(p)}</p>`).join('')}</details></div>`).join('');return}
    const qs=g==='truth'?data.truthFacts:g==='crossword'?data.crossword:data[g+'Quiz'];$('sqList').innerHTML=qs.map((q,i)=>`<div class="school-detail"><b>${i+1}. ${esc(g==='crossword'?q.clue:q[0])}</b>${g!=='crossword'&&g!=='truth'?'<ol>'+q[1].map(a=>'<li>'+esc(a)+'</li>').join('')+'</ol>':''}<p class="school-answer">Ответ: ${esc(g==='crossword'?q.word:g==='truth'?(q[1]?'Правда':'Ложь'):q[1][q[2]])}</p></div>`).join('');
   }catch(e){if(id===seq&&d.open)$('sqList').textContent=e.message}}
@@ -153,6 +155,7 @@
  window.addEventListener('pageshow',e=>{if(e.persisted)location.reload()});
  if(token)enter().catch(e=>{token='';clearToken();gate('student',e.message)});else gate();
 })();
+
 
 
 
