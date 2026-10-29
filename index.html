@@ -250,6 +250,7 @@
   <link rel="stylesheet" href="school.css?v=9">
   <link rel="stylesheet" href="team-game.css?v=8">
   <link rel="stylesheet" href="liza-wheel.css?v=3">
+  <link rel="stylesheet" href="oblomov-quiz.css?v=1">
 </head>
 <body class="school-loading">
   <div class="shell">
@@ -261,10 +262,18 @@
       <section class="screen active" id="home">
         <div class="home-grid">
           <div><p class="eyebrow">Выбери класс</p><h1>Учимся<br>через игру</h1><p class="lead">Нажми на номер класса, чтобы открыть список произведений.</p></div>
-          <button class="class-button" data-go="works" aria-label="Открыть задания для 9 класса">9</button>
+          <div class="home-classes"><button class="class-button" data-go="works" aria-label="Открыть задания для 9 класса">9</button><button id="grade10Button" class="class-button" data-go="works10" aria-label="Открыть произведения 10 класса" hidden>10</button></div>
         </div>
       </section>
 
+      <section class="screen" id="works10">
+        <p class="eyebrow">10 класс</p><h2>Произведения</h2><p class="lead">Выбери произведение для работы всем классом.</p>
+        <button class="work-button" data-go="oblomovBook"><span>«Обломов»</span><span>→</span></button>
+      </section>
+      <section class="screen" id="oblomovBook">
+        <p class="eyebrow">И. А. Гончаров · 10 класс</p><h2>«Обломов»</h2><p class="lead">Проверяем знание романа вместе: от главных событий к точным деталям.</p>
+        <div class="mode-grid"><button id="schoolOblomovQuiz" class="mode"><span class="mode-icon">◈</span><span><strong>Опросник</strong><small>30 вопросов · до 15 участников · разбор с цитатами</small></span></button></div>
+      </section>
       <section class="screen" id="works">
         <p class="eyebrow">9 класс</p><h2>Произведения</h2><p class="lead">Выбери произведение, чтобы открыть игровые задания.</p>
         <button class="work-button" data-work="igor"><span>«Слово о полку Игореве»</span><span>→</span></button>
@@ -332,7 +341,7 @@
     const screens=[...document.querySelectorAll('.screen')],backBtn=document.getElementById('backBtn');
     let current='home';
     function show(id){current=id;screens.forEach(s=>s.classList.toggle('active',s.id===id));backBtn.hidden=id==='home';window.scrollTo({top:0,behavior:'smooth'});}
-    function goBack(){if(['truth','boardgame','crossword'].includes(current))show('book');else if(current==='book')show('works');else show('home')}
+    function goBack(){if(['truth','boardgame','crossword'].includes(current))show('book');else if(current==='oblomovBook')show('works10');else if(current==='book')show('works');else show('home')}
     backBtn.addEventListener('click',goBack);
     document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.go)));
     const igorData={title:'«Слово о полку Игореве»',era:'Древнерусская литература',lead:'Три способа проверить знание сюжета, героев и художественных образов.',map:'assets/igor-board-map-v3.webp',rows:11,cols:15};
@@ -489,9 +498,10 @@
     function registerWebMCP(){const ctx=document.modelContext;if(!ctx?.registerTool)return;const controller=new AbortController();const register=(tool)=>Promise.resolve(ctx.registerTool(tool,{signal:controller.signal})).catch(()=>{});register({name:'open_literature_game',title:'Открыть литературную игру',description:'Открывает один из трёх режимов для выбранного произведения.',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['truth','board','crossword']}},required:['mode'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:({mode})=>{if(mode==='truth'){startTruth();show('truth')}else if(mode==='board'){resetBoard();show('boardgame')}else{resetCrossword();show('crossword')}return{opened:mode}}});register({name:'read_available_activities',title:'Показать доступные игры',description:'Возвращает список доступных игровых заданий и их объём.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({grade:9,works:['Слово о полку Игореве','Бедная Лиза','Лафертовская маковница','Горе от ума','Мёртвые души'],activities:[{id:'truth',cards:10,pool:truthFacts.length},{id:'board',cells:31,difficulties:{easy:{questions:questionBanks.easy.length,lossAfter:null},medium:{questions:questionBanks.medium.length,lossAfter:10},expert:{questions:questionBanks.expert.length,lossAfter:5}}},{id:'crossword',words:crosswordWords.length}]})})}
     // Account-controlled activities are launched through school.js.
   </script>
-  <script src="school.js?v=33"></script>
+  <script src="school.js?v=34"></script>
 </body>
 </html>
+
 
 
 
